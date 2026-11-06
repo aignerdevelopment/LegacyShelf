@@ -54,8 +54,8 @@ You need the .NET SDK (9 or newer is fine; it can target .NET Framework 4.8) or 
 MSBuild with the .NET Framework 4.8 targeting pack.
 
 ```powershell
-git clone <your-repository-url>
-cd LegacyGamesDev
+git clone https://github.com/aignerdevelopment/LegacyShelf.git
+cd LegacyShelf
 dotnet build .\LegacyShelf.sln -c Release
 ```
 
