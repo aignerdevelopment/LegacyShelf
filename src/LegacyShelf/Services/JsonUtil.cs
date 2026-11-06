@@ -48,7 +48,16 @@ namespace LegacyShelf.Services
 
             if (File.Exists(path))
             {
-                File.Replace(tmp, path, null);
+                try
+                {
+                    File.Replace(tmp, path, null);
+                }
+                catch
+                {
+                    // Some non-NTFS volumes do not support ReplaceFile.
+                    File.Copy(tmp, path, true);
+                    File.Delete(tmp);
+                }
             }
             else
             {
