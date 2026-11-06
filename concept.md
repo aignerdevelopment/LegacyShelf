@@ -2,7 +2,7 @@
 
 **Status:** Implemented in v0.1.0 · 2026-11-06  
 **Project:** an unofficial, offline Windows launcher for an already-installed Legacy Games library  
-**License:** 0BSD (proposed — least restrictive OSI-approved license)  
+**License:** 0BSD (least restrictive OSI-approved license)  
 **Working name:** LegacyShelf (easy to rename; not affiliated with Legacy Games)
 
 ---
