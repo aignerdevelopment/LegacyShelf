@@ -2,6 +2,11 @@
 
 **Your games. Your shelf. Offline.**
 
+[![build](https://github.com/aignerdevelopment/LegacyShelf/actions/workflows/build.yml/badge.svg)](https://github.com/aignerdevelopment/LegacyShelf/actions/workflows/build.yml)
+[![release](https://github.com/aignerdevelopment/LegacyShelf/actions/workflows/release.yml/badge.svg)](https://github.com/aignerdevelopment/LegacyShelf/actions/workflows/release.yml)
+
+**Download:** [latest release](https://github.com/aignerdevelopment/LegacyShelf/releases/latest)
+
 LegacyShelf is an unofficial, open-source Windows launcher for a Legacy Games library that is
 already installed on your PC. It scans the game folders, imports the original cover art from the
 old launcher's cache, and presents everything as a fast, searchable, full-screen shelf. It never
@@ -69,6 +74,29 @@ Create a distributable zip with:
 
 ```powershell
 .\tools\build.ps1
+```
+
+Versioned local package:
+
+```powershell
+.\tools\build.ps1 -Version 1.0.0
+# dist\LegacyShelf-1.0.0-win-x64.zip
+```
+
+## Release pipeline
+
+- **build** runs on every push to `main` and every pull request. It builds the app, runs the
+  scanner smoke test, and uploads the zip artifact.
+- **release** is manually triggerable from **Actions → release → Run workflow**. Enter the version,
+  for example `1.0.0`, optionally mark it as a pre-release, and run it.
+  It builds `LegacyShelf-<version>-win-x64.zip`, generates `SHA256SUMS.txt`, and creates or updates
+  the GitHub Release and `v<version>` tag.
+
+Releases can also be triggered by pushing a version tag:
+
+```powershell
+git tag v1.0.0
+git push origin v1.0.0
 ```
 
 The app is **portable by default**. It writes its data to `<exe folder>\data\` when that folder is

@@ -2,8 +2,17 @@ name: build
 
 on:
   push:
+    branches:
+      - main
   pull_request:
   workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   windows:
@@ -17,8 +26,9 @@ jobs:
         with:
           dotnet-version: "9.0.x"
 
-      - name: Build
-        run: dotnet build LegacyShelf.sln -c Release --nologo
+      - name: Build and package
+        shell: pwsh
+        run: .\tools\build.ps1
 
       - name: Smoke-test the scanner
         shell: pwsh
@@ -37,8 +47,10 @@ jobs:
           if ($data.count -ne 1) { throw "Expected 1 game, got $($data.count)" }
           Write-Host "Scanner smoke test passed: $($data.count) game."
 
-      - name: Upload release binary
+      - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: LegacyShelf-win-x64
-          path: src/LegacyShelf/bin/Release/net48/LegacyShelf.exe
+          path: |
+            dist/LegacyShelf-win-x64.zip
+            src/LegacyShelf/bin/Release/net48/LegacyShelf.exe

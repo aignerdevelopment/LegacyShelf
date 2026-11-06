@@ -1,0 +1,146 @@
+name: release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version (numeric, e.g. 1.0.0)"
+        required: true
+        default: "1.0.0"
+      prerelease:
+        description: "Mark this release as a pre-release"
+        type: boolean
+        default: false
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+
+      - name: Resolve version
+        shell: pwsh
+        run: |
+          $version = "${{ inputs.version }}"
+          if ("${{ github.event_name }}" -eq "push") {
+            $version = "${{ github.ref_name }}".TrimStart("v")
+          }
+          if ($version -notmatch '^\d+\.\d+\.\d+$') {
+            throw "Version must be numeric semver, e.g. 1.0.0 (got '$version')."
+          }
+
+          "VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "TAG=v$version" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          Write-Host "Releasing v$version"
+
+      - name: Build and package
+        shell: pwsh
+        run: .\tools\build.ps1 -Version $env:VERSION
+
+      - name: Smoke-test the scanner
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force "testlib\Test Game" | Out-Null
+          Copy-Item "$env:WINDIR\System32\cmd.exe" "testlib\Test Game\Test Game.exe"
+          $exe = Resolve-Path "src\LegacyShelf\bin\Release\net48\LegacyShelf.exe"
+          $report = Join-Path $PWD "report.json"
+          $process = Start-Process -FilePath $exe -ArgumentList @(
+            "--scan-report", $report,
+            "--install-root", (Join-Path $PWD "testlib"),
+            "--no-art"
+          ) -Wait -PassThru
+          if ($process.ExitCode -ne 0) { throw "Scanner exited with $($process.ExitCode)" }
+          $data = Get-Content $report -Raw | ConvertFrom-Json
+          if ($data.count -ne 1) { throw "Expected 1 game, got $($data.count)" }
+          Write-Host "Scanner smoke test passed."
+
+      - name: Generate checksums
+        shell: pwsh
+        run: |
+          $asset = "dist\LegacyShelf-$env:VERSION-win-x64.zip"
+          if (-not (Test-Path $asset)) { throw "Missing release asset: $asset" }
+          $hash = (Get-FileHash $asset -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  $(Split-Path $asset -Leaf)" | Set-Content "dist\SHA256SUMS.txt" -Encoding ascii
+          Get-Content "dist\SHA256SUMS.txt"
+
+      - name: Write release notes
+        shell: pwsh
+        run: |
+          $notes = @(
+            "## LegacyShelf $env:VERSION",
+            "",
+            "Portable, offline launcher for an already-installed Legacy Games library.",
+            "",
+            "### Highlights",
+            "",
+            "- Portable-by-default data folder next to LegacyShelf.exe (appdata fallback).",
+            "- Tiled cover shelf, live search, fullscreen, keyboard navigation.",
+            "- Automatic game scan and original cover-art import.",
+            "- Transport packs: one launcher zip plus one zip per selected game.",
+            "- Auto-unpack game zips, hide games that are not unpacked yet, and keep their metadata.",
+            "- Individual zips keep the proper game folder at the zip root.",
+            "- 0BSD license. Unofficial project; not affiliated with Legacy Games.",
+            "",
+            "### Requirements",
+            "",
+            "Windows 10/11. .NET Framework 4.8 is included with Windows; no installer is required.",
+            "",
+            "### Verify",
+            "",
+            "Use SHA256SUMS.txt to verify the release zip."
+          )
+          $notes | Set-Content "release-notes.md" -Encoding utf8
+          Get-Content "release-notes.md"
+
+      - name: Publish GitHub release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $asset = "dist\LegacyShelf-$env:VERSION-win-x64.zip"
+          $checksum = "dist\SHA256SUMS.txt"
+          $pre = "${{ inputs.prerelease }}" -eq "true"
+
+          git rev-parse -q --verify "refs/tags/$env:TAG" 2>$null | Out-Null
+          $tagExists = $LASTEXITCODE -eq 0
+
+          gh release view $env:TAG 2>$null | Out-Null
+          $releaseExists = $LASTEXITCODE -eq 0
+
+          if ($releaseExists) {
+            gh release upload $env:TAG $asset $checksum --clobber
+            gh release edit $env:TAG --title "LegacyShelf $env:VERSION" --notes-file "release-notes.md"
+            Write-Host "Updated existing release $env:TAG."
+          }
+          else {
+            $arguments = @(
+              "release", "create", $env:TAG,
+              "--title", "LegacyShelf $env:VERSION",
+              "--notes-file", "release-notes.md"
+            )
+            if (-not $tagExists) {
+              $arguments += @("--target", $env:GITHUB_SHA)
+            }
+            if ($pre) { $arguments += "--prerelease" }
+            $arguments += @($asset, $checksum)
+            gh @arguments
+            Write-Host "Created release $env:TAG."
+          }
