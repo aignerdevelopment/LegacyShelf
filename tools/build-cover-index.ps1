@@ -32,7 +32,7 @@ Write-Host "Reading catalog metadata…"
 $json = Get-Content $AppStatePath -Raw -Encoding UTF8 | ConvertFrom-Json
 
 # installer_uuid -> best catalog entry
-$entries = @{}
+$catalog = @{}
 foreach ($product in $json.siteData.catalog) {
     if ($null -eq $product.games) { continue }
     foreach ($game in $product.games) {
@@ -40,68 +40,55 @@ foreach ($product in $json.siteData.catalog) {
         if ([string]::IsNullOrWhiteSpace($game.game_coverart)) { continue }
 
         $uuid = $game.installer_uuid.Trim()
-        $gameName = ""
-        if ($game.game_name) { $gameName = $game.game_name.Trim() }
+        $name = ""
+        if ($game.game_name) { $name = $game.game_name.Trim() }
+
         $candidate = [pscustomobject]@{
             uuid  = $uuid
-            name  = $gameName
+            name  = $name
             url   = $game.game_coverart.Trim()
-            score = 4
+            score = $(if ($name) { 6 } else { 4 })
         }
-        if ($candidate.name) { $candidate.score += 2 }
 
-        if (-not $entries.ContainsKey($uuid) -or $candidate.score -gt $entries[$uuid].score) {
-            $entries[$uuid] = $candidate
+        if (-not $catalog.ContainsKey($uuid) -or $candidate.score -gt $catalog[$uuid].score) {
+            $catalog[$uuid] = $candidate
         }
     }
 }
 
+$selected = @()
 if ($InstalledOnly) {
     $installed = @{}
-    $root = "HKCU:\Software\Legacy Games"
-    if (Test-Path $root) {
-        Get-ChildItem $root | ForEach-Object {
+    $registryRoot = "HKCU:\Software\Legacy Games"
+    if (Test-Path $registryRoot) {
+        Get-ChildItem $registryRoot | ForEach-Object {
             $value = (Get-ItemProperty $_.PSPath -ErrorAction SilentlyContinue).InstallerUUID
             if ($value) { $installed[$value.Trim()] = $true }
         }
     }
-    $entries = @{}
+
+    Write-Host ("Installed UUIDs: {0}" -f $installed.Count)
     foreach ($uuid in $installed.Keys) {
-        # Re-scan the catalog for this UUID so the name/URL come from the best entry.
-        foreach ($product in $json.siteData.catalog) {
-            if ($null -eq $product.games) { continue }
-            foreach ($game in $product.games) {
-                if ($game.installer_uuid -and $game.installer_uuid.Trim() -eq $uuid -and $game.game_coverart) {
-                    $gameName = ""
-                    if ($game.game_name) { $gameName = $game.game_name.Trim() }
-                    $candidate = [pscustomobject]@{
-                        uuid  = $uuid
-                        name  = $gameName
-                        url   = $game.game_coverart.Trim()
-                        score = 4
-                    }
-                    if ($candidate.name) { $candidate.score += 2 }
-                    if (-not $entries.ContainsKey($uuid) -or $candidate.score -gt $entries[$uuid].score) {
-                        $entries[$uuid] = $candidate
-                    }
-                }
-            }
-        }
+        if ($catalog.ContainsKey($uuid)) { $selected += $catalog[$uuid] }
     }
 }
+else {
+    $selected = @($catalog.Values)
+}
 
-$items = @($entries.Values | Sort-Object name)
-if ($Limit -gt 0) { $items = $items | Select-Object -First $Limit }
+$selected = @($selected | Sort-Object name)
+if ($Limit -gt 0) { $selected = @($selected | Select-Object -First $Limit) }
 
-Write-Host ("Fetching and hashing {0} cover(s)…" -f $items.Count)
-$covers = New-Object System.Collections.Generic.List[object]
+Write-Host ("Fetching and hashing {0} cover(s)…" -f $selected.Count)
+$covers = @()
 $sha = [System.Security.Cryptography.SHA256]::Create()
 $index = 0
 
-foreach ($item in $items) {
+foreach ($item in $selected) {
     $index++
     try {
-        Write-Progress -Activity "Building cover index" -Status $item.name -PercentComplete (($index / [Math]::Max(1, $items.Count)) * 100)
+        Write-Progress -Activity "Building cover index" -Status $item.name -PercentComplete (($index / [Math]::Max(1, $selected.Count)) * 100)
+
         $client = New-Object System.Net.WebClient
         $client.Headers.Add("User-Agent", "LegacyShelf/0.1 cover-index")
         try {
@@ -114,12 +101,12 @@ foreach ($item in $items) {
         $hashBytes = $sha.ComputeHash($bytes)
         $hash = ([BitConverter]::ToString($hashBytes) -replace "-", "").ToLowerInvariant()
 
-        $covers.Add([pscustomobject]@{
+        $covers += [pscustomobject]@{
             uuid   = $item.uuid
             name   = $item.name
             url    = $item.url
             sha256 = $hash
-        })
+        }
     }
     catch {
         Write-Warning ("Skipping {0}: {1}" -f $item.name, $_.Exception.Message)
