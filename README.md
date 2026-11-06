@@ -145,6 +145,11 @@ You can also copy the game zips next to `LegacyShelf.exe` instead of extracting 
 detects them, offers **Unzip**, extracts each zip into the correct folder, and asks whether to delete
 the zips when all of them are unpacked.
 
+Packing and unpacking do **not** show a “are you sure?” dialog when there is enough free space —
+they start immediately. If the destination cannot hold the pack or extraction, a themed
+**This won't fit** dialog shows the needed space, available space, and shortfall, with an option to
+choose another folder.
+
 The launcher zip contains:
 
 ```

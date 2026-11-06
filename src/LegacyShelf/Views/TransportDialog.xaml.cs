@@ -23,6 +23,7 @@ namespace LegacyShelf.Views
         private readonly bool _launcherAvailable;
         private CancellationTokenSource _cts;
         private bool _packing;
+        private bool _sizesComputed;
         private long _launcherBytes;
 
         public TransportDialog(AppConfig config, System.Collections.Generic.IList<Game> games, string preselectGameId = null)
@@ -122,6 +123,7 @@ namespace LegacyShelf.Views
             {
                 item.SizeText = FormatBytes(item.SizeBytes);
             }
+            _sizesComputed = true;
             UpdateSelectionSummary();
         }
 
@@ -229,45 +231,61 @@ namespace LegacyShelf.Views
         {
             if (_packing) return;
 
-            var selected = _items.Where(i => i.IsSelected).Select(i => i.Game).ToList();
+            var selectedItems = _items.Where(i => i.IsSelected).ToList();
+            var selected = selectedItems.Select(i => i.Game).ToList();
             if (selected.Count == 0)
             {
-                MessageBox.Show(this, "Select at least one game.", "Pack for transport",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
+                ThemedDialog.Info(this, "Pack for transport", "Select a game",
+                    "Choose at least one game to include in the transport pack.");
                 return;
             }
 
             var destination = DestinationTextBox.Text.Trim().Trim('"');
             if (string.IsNullOrWhiteSpace(destination))
             {
-                MessageBox.Show(this, "Choose a destination folder.", "Pack for transport",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
+                ThemedDialog.Info(this, "Pack for transport", "Choose a folder",
+                    "Choose a new destination folder for the transport zips.");
                 return;
             }
 
             if (Directory.Exists(destination))
             {
-                MessageBox.Show(this,
-                    "The destination already exists. Choose a new folder name.",
-                    "Pack for transport",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                ThemedDialog.Info(this, "Pack for transport", "Folder already exists",
+                    "Choose a new folder name so the pack cannot mix with existing data.");
                 return;
             }
 
             var includeLauncher = IncludeLauncherCheckBox.IsChecked == true && _launcherAvailable;
-            var confirm = MessageBox.Show(this,
-                string.Format(
-                    "Create a launcher zip and {0} game zip{1} in:\n\n{2}\n\n" +
-                    "Zipping game files can take a long time and needs free space. Continue?",
-                    selected.Count,
-                    selected.Count == 1 ? "" : "s",
-                    destination),
-                "Pack for transport",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
+            var required = _sizesComputed
+                ? selectedItems.Sum(i => i.SizeBytes) + (includeLauncher ? _launcherBytes : 0) + 32L * 1024 * 1024
+                : await Task.Run(() => TransportPacker.EstimateRequiredBytes(_config, selected, includeLauncher));
 
-            if (confirm != MessageBoxResult.Yes) return;
+            while (true)
+            {
+                var available = StorageUtil.GetAvailableFreeSpace(destination);
+                if (available <= 0 || required <= available) break;
+
+                var chooseAnother = ThemedDialog.ShowWontFit(this, destination, required, available, true);
+                if (!chooseAnother) return;
+
+                var picked = FolderPicker.Pick(
+                    "Choose another destination folder",
+                    Path.GetDirectoryName(destination),
+                    this);
+                if (string.IsNullOrWhiteSpace(picked)) return;
+
+                DestinationTextBox.Text = Path.Combine(
+                    picked,
+                    "LegacyShelf-Transport-" + DateTime.Now.ToString("yyyyMMdd-HHmm"));
+                destination = DestinationTextBox.Text.Trim().Trim('"');
+
+                if (Directory.Exists(destination))
+                {
+                    ThemedDialog.Info(this, "Pack for transport", "Folder already exists",
+                        "Choose a new folder name so the pack cannot mix with existing data.");
+                    return;
+                }
+            }
 
             _packing = true;
             _cts = new CancellationTokenSource();
@@ -297,18 +315,24 @@ namespace LegacyShelf.Views
                 ProgressOverlay.Visibility = Visibility.Collapsed;
                 PackButton.IsEnabled = true;
 
-                var open = MessageBox.Show(this,
+                var open = ThemedDialog.Show(
+                    this,
+                    "Pack complete",
+                    "Transport pack created",
                     string.Format(
-                        "Transport pack created.\n\nLegacyShelf-Launcher.zip + {0} game zip{1}\nTotal output: {2}\n{3}\n\nOpen the folder now?",
+                        "Launcher zip + {0} game zip{1}.",
                         result.GameCount,
-                        result.GameCount == 1 ? "" : "s",
+                        result.GameCount == 1 ? "" : "s"),
+                    string.Format(
+                        "Total output: {0}{1}{1}{2}",
                         FormatBytes(result.TotalBytes),
+                        Environment.NewLine,
                         result.Destination),
-                    "Pack for transport",
-                    MessageBoxButton.YesNo,
-                    MessageBoxImage.Information);
+                    "Open folder",
+                    "Close",
+                    DialogTone.Info);
 
-                if (open == MessageBoxResult.Yes)
+                if (open)
                 {
                     try
                     {
@@ -333,11 +357,20 @@ namespace LegacyShelf.Views
                 _packing = false;
                 ProgressOverlay.Visibility = Visibility.Collapsed;
                 UpdateSelectionSummary();
-                MessageBox.Show(this,
-                    "Packing was cancelled. Any partial destination folder was removed.",
-                    "Pack for transport",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                ThemedDialog.Info(this, "Pack cancelled", "Packing was cancelled",
+                    "Any partial destination folder was removed.");
+            }
+            catch (NotEnoughSpaceException ex)
+            {
+                _packing = false;
+                ProgressOverlay.Visibility = Visibility.Collapsed;
+                UpdateSelectionSummary();
+                ThemedDialog.ShowWontFit(
+                    this,
+                    ex.TargetPath,
+                    ex.RequiredBytes,
+                    ex.AvailableBytes,
+                    false);
             }
             catch (Exception ex)
             {
@@ -345,12 +378,12 @@ namespace LegacyShelf.Views
                 ProgressOverlay.Visibility = Visibility.Collapsed;
                 UpdateSelectionSummary();
                 Log.Error("Transport pack failed.", ex);
-                MessageBox.Show(this,
-                    "The transport pack failed.\n\n" + ex.Message +
-                    "\n\nDetails were written to:\n" + AppPaths.LogPath,
-                    "Pack for transport",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                ThemedDialog.Error(
+                    this,
+                    "Pack failed",
+                    "The transport pack failed",
+                    ex.Message,
+                    "Details were written to:" + Environment.NewLine + AppPaths.LogPath);
             }
             finally
             {
@@ -455,3 +488,4 @@ namespace LegacyShelf.Views
         }
     }
 }
+

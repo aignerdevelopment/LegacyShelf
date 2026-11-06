@@ -187,6 +187,16 @@ namespace LegacyShelf.Services
             }
         }
 
+        public static long EstimateRequiredBytes(
+            AppConfig config,
+            IList<Game> games,
+            bool includeLauncherData)
+        {
+            var artwork = GetArtworkForGames(games ?? new List<Game>());
+            var launcherInfo = GetLauncherDataInfo(
+                includeLauncherData && config != null ? config.Sources.LauncherDataDir : null);
+            return EstimateBytes(games ?? new List<Game>(), artwork, launcherInfo);
+        }
         private void CreateGameZip(
             Game game,
             string folderName,
@@ -326,7 +336,7 @@ namespace LegacyShelf.Services
             }
         }
 
-        private List<ArtworkToCopy> GetArtworkForGames(IList<Game> games)
+        private static List<ArtworkToCopy> GetArtworkForGames(IList<Game> games)
         {
             var result = new List<ArtworkToCopy>();
             ArtworkManifest manifest;
@@ -410,7 +420,7 @@ namespace LegacyShelf.Services
             }
         }
 
-        private LauncherDataInfo GetLauncherDataInfo(string launcherDir)
+        private static LauncherDataInfo GetLauncherDataInfo(string launcherDir)
         {
             var info = new LauncherDataInfo();
             if (string.IsNullOrWhiteSpace(launcherDir) || !Directory.Exists(launcherDir)) return info;
@@ -770,14 +780,18 @@ namespace LegacyShelf.Services
                 var required = needed + 50L * 1024 * 1024;
                 if (drive.AvailableFreeSpace < required)
                 {
-                    throw new InvalidOperationException(string.Format(
-                        "Not enough free space on {0}.\n\nNeeded: {1:0.0} GB\nAvailable: {2:0.0} GB",
-                        root,
-                        required / (1024.0 * 1024.0 * 1024.0),
-                        drive.AvailableFreeSpace / (1024.0 * 1024.0 * 1024.0)));
+                    throw new NotEnoughSpaceException(
+                        string.Format(
+                            "Not enough free space on {0}. Needed {1}, available {2}.",
+                            root,
+                            FormatUtil.Bytes(required),
+                            FormatUtil.Bytes(drive.AvailableFreeSpace)),
+                        destination,
+                        required,
+                        drive.AvailableFreeSpace);
                 }
             }
-            catch (InvalidOperationException)
+            catch (NotEnoughSpaceException)
             {
                 throw;
             }
@@ -837,3 +851,4 @@ namespace LegacyShelf.Services
         }
     }
 }
+

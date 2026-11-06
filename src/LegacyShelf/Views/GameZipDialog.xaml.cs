@@ -97,18 +97,39 @@ namespace LegacyShelf.Views
             if (_unpacking) return;
 
             var selected = _items.Where(i => i.IsSelected).Select(i => i.Candidate).ToList();
-            if (selected.Count == 0) return;
+            if (selected.Count == 0)
+            {
+                ThemedDialog.Info(this, "Unpack game zips", "Select a zip",
+                    "Choose at least one game zip to unpack.");
+                return;
+            }
 
-            var confirm = MessageBox.Show(this,
-                string.Format(
-                    "Extract {0} game zip{1} into:\n\n{2}\n\nThe zip root contains the game folder.",
-                    selected.Count,
-                    selected.Count == 1 ? "" : "s",
-                    AppPaths.ExeDir),
-                "Unpack game zips",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
-            if (confirm != MessageBoxResult.Yes) return;
+            UnpackButton.IsEnabled = false;
+            UnpackButton.Content = "Checking…";
+
+            long required;
+            try
+            {
+                required = await Task.Run(() => GameZipService.GetExtractionBytes(selected));
+            }
+            catch (Exception ex)
+            {
+                UnpackButton.Content = "Unpack selected";
+                UpdateSummary();
+                ThemedDialog.Error(this, "Unpack game zips", "Could not read a zip",
+                    ex.Message);
+                return;
+            }
+
+            UnpackButton.Content = "Unpack selected";
+            UpdateSummary();
+
+            var available = StorageUtil.GetAvailableFreeSpace(AppPaths.ExeDir);
+            if (available > 0 && required > available)
+            {
+                ThemedDialog.ShowWontFit(this, AppPaths.ExeDir, required, available, false);
+                return;
+            }
 
             _unpacking = true;
             _cts = new CancellationTokenSource();
@@ -139,16 +160,19 @@ namespace LegacyShelf.Views
                 var allUnpacked = _items.All(i => Directory.Exists(i.Candidate.TargetDir));
                 if (allUnpacked)
                 {
-                    var delete = MessageBox.Show(this,
-                        string.Format(
-                            "All {0} game zip{1} in this folder are unpacked.\n\nDelete the zip file{1} now?",
-                            _items.Count,
-                            _items.Count == 1 ? "" : "s"),
-                        "Unpack game zips",
-                        MessageBoxButton.YesNo,
-                        MessageBoxImage.Question);
+                    var delete = ThemedDialog.Show(
+                        this,
+                        "Unpack complete",
+                        "All game zips are unpacked",
+                        _items.Count == 1
+                            ? "The game zip is unpacked. Keep it as a backup, or delete it now?"
+                            : "All " + _items.Count + " game zips are unpacked. Keep them as a backup, or delete them now?",
+                        null,
+                        "Delete zips",
+                        "Keep zips",
+                        DialogTone.Info);
 
-                    if (delete == MessageBoxResult.Yes)
+                    if (delete)
                     {
                         GameZipService.DeleteZips(_candidates);
                     }
@@ -162,11 +186,8 @@ namespace LegacyShelf.Views
                 _unpacking = false;
                 ProgressOverlay.Visibility = Visibility.Collapsed;
                 UpdateSummary();
-                MessageBox.Show(this,
-                    "Unpacking was cancelled. Partial game folders created by this run were removed.",
-                    "Unpack game zips",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                ThemedDialog.Info(this, "Unpack cancelled", "Unpacking was cancelled",
+                    "Partial game folders created by this run were removed.");
             }
             catch (Exception ex)
             {
@@ -174,12 +195,12 @@ namespace LegacyShelf.Views
                 ProgressOverlay.Visibility = Visibility.Collapsed;
                 UpdateSummary();
                 Log.Error("Game zip extraction failed.", ex);
-                MessageBox.Show(this,
-                    "Could not unpack the game zip(s).\n\n" + ex.Message +
-                    "\n\nDetails were written to:\n" + AppPaths.LogPath,
-                    "Unpack game zips",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                ThemedDialog.Error(
+                    this,
+                    "Unpack failed",
+                    "Could not unpack the game zip(s)",
+                    ex.Message,
+                    "Details were written to:" + Environment.NewLine + AppPaths.LogPath);
             }
             finally
             {
@@ -234,3 +255,4 @@ namespace LegacyShelf.Views
         }
     }
 }
+

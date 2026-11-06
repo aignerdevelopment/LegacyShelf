@@ -571,6 +571,10 @@ Each game zip root is the game folder (not a `Games\` wrapper), so extracting a 
 same folder as `LegacyShelf.exe` produces the desired layout. A small
 `<Game folder>\.legacyshelf-game.json` inside the zip makes manually unpacked zips self-describing.
 
+Packing and unpacking start immediately when the destination has enough free space. If it does not,
+a themed **This won't fit** dialog shows needed/available/shortfall values; for packing it also offers
+to choose another destination folder.
+
 `LibraryScanner` merges `portable-games.json` before the registry/folder scan, preserving installer
 UUIDs and using relative paths. Games whose folder is absent are marked `absent`, hidden by default,
 and kept in metadata. `GameZipService` reads zips in the launcher folder, offers **Unzip**, extracts

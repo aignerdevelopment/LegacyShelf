@@ -88,6 +88,25 @@ namespace LegacyShelf.Services
             return result;
         }
 
+        public static long GetExtractionBytes(IEnumerable<GameZipCandidate> candidates)
+        {
+            long total = 0;
+            foreach (var candidate in candidates ?? Enumerable.Empty<GameZipCandidate>())
+            {
+                using (var archive = ZipFile.OpenRead(candidate.ZipPath))
+                {
+                    foreach (var entry in archive.Entries)
+                    {
+                        if (!string.IsNullOrEmpty(entry.Name))
+                        {
+                            total += entry.Length;
+                        }
+                    }
+                }
+            }
+            return total;
+        }
+
         public void Extract(
             IList<GameZipCandidate> candidates,
             IProgress<PackProgress> progress,

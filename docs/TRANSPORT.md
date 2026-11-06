@@ -71,6 +71,10 @@ If you copy game zips into that folder without extracting them, LegacyShelf's **
 startup prompt extracts them, verifies the destination folders, and asks whether to delete the zips
 once all of them are unpacked.
 
+There is no confirmation prompt when free space is sufficient: packing and unpacking start
+immediately. If the destination is too small, a themed **This won't fit** dialog shows needed,
+available, and shortfall values, plus a **Choose another folder** action for packs.
+
 ## Missing games
 
 `data\portable-games.json` keeps every packed game's id, UUID, name, relative folder, executable,
