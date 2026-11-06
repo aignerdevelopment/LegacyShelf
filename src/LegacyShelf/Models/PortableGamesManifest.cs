@@ -23,5 +23,7 @@ namespace LegacyShelf.Models
         public string FolderName { get; set; }
         public string RelativeDir { get; set; }
         public string ExeName { get; set; }
+        public string ZipName { get; set; }
     }
 }
+

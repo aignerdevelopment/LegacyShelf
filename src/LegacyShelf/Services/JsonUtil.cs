@@ -35,6 +35,12 @@ namespace LegacyShelf.Services
             }
         }
 
+        public static T Deserialize<T>(string json) where T : class
+        {
+            if (string.IsNullOrWhiteSpace(json)) return null;
+            return CreateSerializer().Deserialize<T>(json);
+        }
+
         public static void Save<T>(string path, T value, bool pretty = false)
         {
             var json = CreateSerializer().Serialize(value);

@@ -10,6 +10,7 @@ namespace LegacyShelf.Models
         public int GameCount { get; set; }
         public long TotalBytes { get; set; }
         public bool IncludeLauncherData { get; set; }
+        public string LauncherZip { get; set; }
         public List<TransportGameEntry> Games { get; set; }
 
         public TransportManifest()
@@ -26,5 +27,7 @@ namespace LegacyShelf.Models
         public string Uuid { get; set; }
         public string RelativeDir { get; set; }
         public string ExeName { get; set; }
+        public string ZipName { get; set; }
     }
 }
+

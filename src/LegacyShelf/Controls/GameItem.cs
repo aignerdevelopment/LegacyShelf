@@ -42,9 +42,14 @@ namespace LegacyShelf.Controls
             get { return Game.IsMissing; }
         }
 
+        public bool IsAbsent
+        {
+            get { return Game.IsAbsent; }
+        }
+
         public string StatusText
         {
-            get { return Game.IsMissing ? "Missing files" : "Installed"; }
+            get { return Game.IsAbsent ? "Not unpacked" : Game.IsMissing ? "Missing files" : "Installed"; }
         }
 
         public string Initials
@@ -169,6 +174,7 @@ namespace LegacyShelf.Controls
         {
             OnPropertyChanged("Name");
             OnPropertyChanged("IsMissing");
+            OnPropertyChanged("IsAbsent");
             OnPropertyChanged("StatusText");
             OnPropertyChanged("ToolTipText");
             OnPropertyChanged("SearchText");
@@ -212,3 +218,4 @@ namespace LegacyShelf.Controls
         }
     }
 }
+

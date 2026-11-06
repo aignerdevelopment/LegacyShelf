@@ -26,9 +26,15 @@ namespace LegacyShelf.Models
             get { return string.Equals(Status, "missing", StringComparison.OrdinalIgnoreCase); }
         }
 
+        public bool IsAbsent
+        {
+            get { return string.Equals(Status, "absent", StringComparison.OrdinalIgnoreCase); }
+        }
+
         public string SortName
         {
             get { return string.IsNullOrWhiteSpace(Name) ? FolderName : Name; }
         }
     }
 }
+

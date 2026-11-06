@@ -33,5 +33,7 @@ namespace LegacyShelf.Models
         public int GameCount { get; set; }
         public long TotalBytes { get; set; }
         public bool IncludedLauncherData { get; set; }
+        public string LauncherZip { get; set; }
     }
 }
+

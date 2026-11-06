@@ -29,6 +29,7 @@ namespace LegacyShelf.Views
 
             RootsList.ItemsSource = _roots;
             ShowHiddenCheckBox.IsChecked = Config.Ui.ShowHidden;
+            ShowAbsentCheckBox.IsChecked = Config.Ui.ShowAbsentGames;
             FetchCoversCheckBox.IsChecked = Config.Sources.FetchMissingCovers;
             LastScanText.Text = lastScanText ?? string.Empty;
 
@@ -201,6 +202,7 @@ namespace LegacyShelf.Views
             Config.Sources.LauncherDataDir = _launcherDir;
             Config.Sources.FetchMissingCovers = FetchCoversCheckBox.IsChecked == true;
             Config.Ui.ShowHidden = ShowHiddenCheckBox.IsChecked == true;
+            Config.Ui.ShowAbsentGames = ShowAbsentCheckBox.IsChecked == true;
 
             DialogResult = true;
             Close();
@@ -213,3 +215,4 @@ namespace LegacyShelf.Views
         }
     }
 }
+

@@ -48,6 +48,7 @@ namespace LegacyShelf
         private string _lastScannedAt;
         private string _lastArtworkSummary;
         private string _searchText;
+        private bool _zipPrompted;
 
         public MainWindow(AppConfig config, bool fetchMissing, bool firstRun)
         {
@@ -294,10 +295,89 @@ namespace LegacyShelf
                 Dispatcher.BeginInvoke(new Action(() => scroll.ScrollToVerticalOffset(offset)), DispatcherPriority.Background);
             }
 
-            ShowToast(string.Format(
-                "Library ready · {0} games · {1} covers",
-                result.Games.Count,
-                result.Artwork.FromCache + result.Artwork.Fetched));
+            var absent = result.Games.Count(g => g.IsAbsent);
+            if (absent > 0 && !_config.Ui.ShowAbsentGames)
+            {
+                ShowToast(string.Format(
+                    "{0} packed game{1} not unpacked — use Unzip",
+                    absent,
+                    absent == 1 ? "" : "s"));
+            }
+            else
+            {
+                ShowToast(string.Format(
+                    "Library ready · {0} games · {1} covers",
+                    result.Games.Count,
+                    result.Artwork.FromCache + result.Artwork.Fetched));
+            }
+
+            _ = PromptForGameZipsAsync();
+        }
+
+        private async Task PromptForGameZipsAsync()
+        {
+            if (_zipPrompted) return;
+            _zipPrompted = true;
+
+            await Task.Delay(900);
+            for (var i = 0; i < 20 && _scanning; i++) await Task.Delay(300);
+            if (_scanning) return;
+
+            List<GameZipCandidate> candidates;
+            try
+            {
+                candidates = await Task.Run(() => new GameZipService().FindCandidates());
+            }
+            catch (Exception ex)
+            {
+                Log.Warn("Could not check game zips: " + ex.Message);
+                return;
+            }
+
+            if (candidates.Count == 0) return;
+            ShowGameZipDialog(candidates);
+        }
+
+        private async void Unzip_Click(object sender, RoutedEventArgs e)
+        {
+            _zipPrompted = true;
+
+            List<GameZipCandidate> candidates;
+            try
+            {
+                candidates = await Task.Run(() => new GameZipService().FindCandidates());
+            }
+            catch (Exception ex)
+            {
+                Log.Error("Could not check game zips.", ex);
+                MessageBox.Show(this,
+                    "Could not check the game zips.\n\n" + ex.Message,
+                    "LegacyShelf",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+                return;
+            }
+
+            if (candidates.Count == 0)
+            {
+                ShowToast("No unpacked game zips found in this folder");
+                return;
+            }
+
+            ShowGameZipDialog(candidates);
+        }
+
+        private void ShowGameZipDialog(IList<GameZipCandidate> candidates)
+        {
+            var dialog = new GameZipDialog(candidates)
+            {
+                Owner = this
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                BeginScan(true);
+            }
         }
 
         private async void RefreshLater()
@@ -383,6 +463,7 @@ namespace LegacyShelf
             if (item == null) return false;
 
             if (!_config.Ui.ShowHidden && _config.Games.Hidden.Contains(item.Id)) return false;
+            if (item.Game.IsAbsent && !_config.Ui.ShowAbsentGames) return false;
 
             if (string.IsNullOrWhiteSpace(_searchText)) return true;
             return item.SearchText.Contains(_searchText);
@@ -402,17 +483,28 @@ namespace LegacyShelf
         {
             if (_view == null) return;
 
-            var total = _games.Count;
+            var absent = _games.Count(i => i.Game.IsAbsent);
+            var availableTotal = _games.Count(i => !i.Game.IsAbsent || _config.Ui.ShowAbsentGames);
             var visible = _view.Cast<object>().Count();
 
-            CountText.Text = visible == total
-                ? string.Format("{0} game{1}", total, total == 1 ? "" : "s")
-                : string.Format("{0} of {1}", visible, total);
+            CountText.Text = visible == availableTotal
+                ? string.Format("{0} game{1}", availableTotal, availableTotal == 1 ? "" : "s")
+                : string.Format("{0} of {1}", visible, availableTotal);
+
+            EmptySourcesButton.Visibility = Visibility.Visible;
+            EmptyUnzipButton.Visibility = Visibility.Collapsed;
 
             if (visible == 0)
             {
                 EmptyPanel.Visibility = Visibility.Visible;
-                if (total == 0)
+                if (availableTotal == 0 && absent > 0 && !_config.Ui.ShowAbsentGames)
+                {
+                    EmptyTitle.Text = "No games unpacked yet";
+                    EmptyText.Text = "Game zips are waiting in this folder. Extract them here or use Unzip.";
+                    EmptySourcesButton.Visibility = Visibility.Collapsed;
+                    EmptyUnzipButton.Visibility = Visibility.Visible;
+                }
+                else if (availableTotal == 0)
                 {
                     EmptyTitle.Text = "No games found";
                     EmptyText.Text = "Add the folder where your games are installed.";
@@ -421,6 +513,7 @@ namespace LegacyShelf
                 {
                     EmptyTitle.Text = "No matches";
                     EmptyText.Text = "Try a different search, or clear the search box.";
+                    EmptySourcesButton.Visibility = Visibility.Collapsed;
                 }
             }
             else
@@ -428,7 +521,7 @@ namespace LegacyShelf
                 EmptyPanel.Visibility = Visibility.Collapsed;
             }
 
-            HintText.Visibility = total > 0 ? Visibility.Visible : Visibility.Collapsed;
+            HintText.Visibility = availableTotal > 0 ? Visibility.Visible : Visibility.Collapsed;
             RescanButton.IsEnabled = !_scanning;
         }
 
@@ -972,6 +1065,7 @@ namespace LegacyShelf
         private static extern bool GetMonitorInfo(IntPtr hMonitor, ref MonitorInfo lpmi);
     }
 }
+
 
 
 

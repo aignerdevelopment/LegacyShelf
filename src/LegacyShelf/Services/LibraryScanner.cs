@@ -64,43 +64,69 @@ namespace LegacyShelf.Services
             var byFolder = new Dictionary<string, Game>(StringComparer.OrdinalIgnoreCase);
 
             // A transport pack carries its own game metadata, so it works without the registry.
-            var portable = PortableGamesStore.Load();
-            if (portable != null && portable.Games != null)
+            var portable = PortableGamesStore.Load() ?? new PortableGamesManifest();
+            if (portable.Games == null) portable.Games = new List<PortableGameEntry>();
+
+            // Manually extracted game zips carry a small metadata file inside the game folder.
+            var discovered = DiscoverPortableMetadata(roots);
+            if (discovered.Count > 0)
             {
-                foreach (var entry in portable.Games)
+                var added = false;
+                foreach (var entry in discovered)
                 {
-                    token.ThrowIfCancellationRequested();
-                    if (entry == null || string.IsNullOrWhiteSpace(entry.RelativeDir)) continue;
-
-                    var installDir = AppPaths.ResolveStoredPath(entry.RelativeDir);
-                    if (string.IsNullOrWhiteSpace(installDir)) continue;
-
-                    if (!IsUnderAny(installDir, roots))
+                    if (portable.Games.Any(g =>
+                        (!string.IsNullOrWhiteSpace(entry.RelativeDir) &&
+                         string.Equals(g.RelativeDir, entry.RelativeDir, StringComparison.OrdinalIgnoreCase)) ||
+                        (!string.IsNullOrWhiteSpace(entry.Id) &&
+                         string.Equals(g.Id, entry.Id, StringComparison.OrdinalIgnoreCase))))
                     {
-                        Log.Info("Skipping portable game outside selected roots: " + entry.Name);
                         continue;
                     }
 
-                    var exeName = entry.ExeName;
-                    var exePath = string.IsNullOrWhiteSpace(exeName)
-                        ? null
-                        : Path.Combine(installDir, exeName);
-
-                    if (string.IsNullOrWhiteSpace(exePath) || !File.Exists(exePath))
-                    {
-                        string found;
-                        if (FolderScanner.TryFindExe(installDir, out found)) exePath = found;
-                    }
-
-                    var game = CreateGame(entry.Uuid, entry.Name, installDir, exePath, exeName);
-                    if (!string.IsNullOrWhiteSpace(entry.Id)) game.Id = entry.Id;
-                    if (!string.IsNullOrWhiteSpace(entry.FolderName)) game.FolderName = entry.FolderName;
-
-                    AddGame(games, byExe, byFolder, game);
+                    portable.Games.Add(entry);
+                    added = true;
                 }
 
-                Log.Info("Portable game manifest: " + portable.Games.Count + " entries.");
+                if (added) PortableGamesStore.Save(portable);
             }
+
+            foreach (var entry in portable.Games)
+            {
+                token.ThrowIfCancellationRequested();
+                if (entry == null || string.IsNullOrWhiteSpace(entry.RelativeDir)) continue;
+
+                var installDir = AppPaths.ResolveStoredPath(entry.RelativeDir);
+                if (string.IsNullOrWhiteSpace(installDir)) continue;
+
+                if (!IsUnderAny(installDir, roots))
+                {
+                    Log.Info("Skipping portable game outside selected roots: " + entry.Name);
+                    continue;
+                }
+
+                var directoryExists = Directory.Exists(installDir);
+                var exeName = entry.ExeName;
+                var exePath = string.IsNullOrWhiteSpace(exeName)
+                    ? null
+                    : Path.Combine(installDir, exeName);
+
+                if (string.IsNullOrWhiteSpace(exePath) || !File.Exists(exePath))
+                {
+                    string found;
+                    if (FolderScanner.TryFindExe(installDir, out found)) exePath = found;
+                }
+
+                var game = CreateGame(entry.Uuid, entry.Name, installDir, exePath, exeName);
+                if (!string.IsNullOrWhiteSpace(entry.Id)) game.Id = entry.Id;
+                if (!string.IsNullOrWhiteSpace(entry.FolderName)) game.FolderName = entry.FolderName;
+                if (!directoryExists) game.Status = "absent";
+
+                AddGame(games, byExe, byFolder, game);
+            }
+
+            Log.Info("Portable game manifest: " + portable.Games.Count + " entries (" +
+                     portable.Games.Count(g => !Directory.Exists(AppPaths.ResolveStoredPath(g.RelativeDir))) +
+                     " not unpacked).");
 
             foreach (var entry in registryGames)
             {
@@ -238,15 +264,54 @@ namespace LegacyShelf.Services
 
             Report(progress, 100, "Ready");
             Log.Info(string.Format(
-                "Scan complete: {0} games, {1} ok, {2} missing, roots: {3}",
+                "Scan complete: {0} games, {1} ok, {2} missing, {3} not unpacked, roots: {4}",
                 games.Count,
-                games.Count(g => !g.IsMissing),
+                games.Count(g => string.Equals(g.Status, "ok", StringComparison.OrdinalIgnoreCase)),
                 games.Count(g => g.IsMissing),
+                games.Count(g => g.IsAbsent),
                 string.Join("; ", roots)));
 
             return result;
         }
 
+        private static List<PortableGameEntry> DiscoverPortableMetadata(IEnumerable<string> roots)
+        {
+            var found = new List<PortableGameEntry>();
+            foreach (var root in roots)
+            {
+                try
+                {
+                    foreach (var dir in Directory.GetDirectories(root))
+                    {
+                        var meta = Path.Combine(dir, ".legacyshelf-game.json");
+                        if (!File.Exists(meta)) continue;
+
+                        var entry = PortableGamesStore.ReadMetadataFile(meta);
+                        if (entry == null) continue;
+
+                        entry.RelativeDir = Path.GetFileName(dir);
+                        if (string.IsNullOrWhiteSpace(entry.FolderName)) entry.FolderName = Path.GetFileName(dir);
+                        if (string.IsNullOrWhiteSpace(entry.Name)) entry.Name = entry.FolderName;
+                        if (string.IsNullOrWhiteSpace(entry.Id) && !string.IsNullOrWhiteSpace(entry.Uuid))
+                        {
+                            entry.Id = "uuid:" + entry.Uuid;
+                        }
+                        if (string.IsNullOrWhiteSpace(entry.ExeName))
+                        {
+                            string exe;
+                            if (FolderScanner.TryFindExe(dir, out exe)) entry.ExeName = Path.GetFileName(exe);
+                        }
+
+                        found.Add(entry);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Warn("Could not inspect portable metadata under '" + root + "': " + ex.Message);
+                }
+            }
+            return found;
+        }
         private static Game CreateGame(string uuid, string name, string installDir, string exePath, string exeName)
         {
             var folderName = string.IsNullOrWhiteSpace(installDir) ? name : Path.GetFileName(installDir);
@@ -377,3 +442,5 @@ namespace LegacyShelf.Services
         }
     }
 }
+
+

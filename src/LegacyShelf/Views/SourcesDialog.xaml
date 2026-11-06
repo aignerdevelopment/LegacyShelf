@@ -146,6 +146,10 @@
                                   Style="{StaticResource CheckBoxStyle}"
                                   Content="Show hidden games"
                                   Margin="0,0,0,12" />
+                        <CheckBox x:Name="ShowAbsentCheckBox"
+                                  Style="{StaticResource CheckBoxStyle}"
+                                  Content="Show games that are not unpacked"
+                                  Margin="0,0,0,12" />
                         <CheckBox x:Name="FetchCoversCheckBox"
                                   Style="{StaticResource CheckBoxStyle}"
                                   Content="Fetch missing covers when online" />
@@ -183,3 +187,4 @@
         </Grid>
     </Border>
 </Window>
+

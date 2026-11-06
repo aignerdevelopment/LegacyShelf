@@ -540,31 +540,42 @@ F:\LegacyGamesDev\
 ### 9.5 Transport packs
 
 `Pack` in the top bar (and **Pack this game for transport…** in the tile context menu) creates a
-self-contained folder:
+a set of zips:
 
 ```
 LegacyShelf-Transport-YYYYMMDD-HHmm\
-  LegacyShelf.exe
-  LegacyShelf.exe.config
-  LegacyShelf.portable
+  LegacyShelf-Launcher.zip       exe + data/ at the zip root
+  <Game folder>.zip              one zip per selected game
   README-TRANSPORT.txt
   transport-manifest.json
-  Games\<selected game folders>\
-  data\
-    config.json              roots: "Games", "LauncherData"
-    artwork\
-    artwork.json
-    cover-index.local.json
-    portable-games.json      id, uuid, name, relative folder, exe
-  LauncherData\              optional and sanitized
-    app-state.json           public catalog fields only
-    Cache\Cache_Data\f_*
 ```
 
+The launcher zip:
+
+```
+LegacyShelf.exe
+LegacyShelf.exe.config
+LegacyShelf.portable
+data\
+  config.json              roots: ".", "LauncherData"
+  artwork\
+  artwork.json
+  cover-index.local.json
+  portable-games.json      id, uuid, name, relative folder, zip name, exe
+LauncherData\              optional and sanitized
+  app-state.json           public catalog fields only
+  Cache\Cache_Data\f_*
+```
+
+Each game zip root is the game folder (not a `Games\` wrapper), so extracting a game zip into the
+same folder as `LegacyShelf.exe` produces the desired layout. A small
+`<Game folder>\.legacyshelf-game.json` inside the zip makes manually unpacked zips self-describing.
+
 `LibraryScanner` merges `portable-games.json` before the registry/folder scan, preserving installer
-UUIDs and using relative paths. That makes the pack work on a new PC without the old registry, the
-installer, the store, or the original launcher. The sanitizer never copies `user`, `token`,
-`profile`, reviews, cookies, local storage, or logs.
+UUIDs and using relative paths. Games whose folder is absent are marked `absent`, hidden by default,
+and kept in metadata. `GameZipService` reads zips in the launcher folder, offers **Unzip**, extracts
+them, and asks to delete the zips when all of them are unpacked. The sanitizer never copies `user`,
+`token`, `profile`, reviews, cookies, local storage, or logs.
 
 ---
 
@@ -718,7 +729,7 @@ The first usable build (M1–M2) is deliberately small; artwork polish and edge 
 | Dialog actions | Add installed directory · Edit installed directory · Edit launcher directory · Rescan. |
 | Small, no big dependencies | WPF/.NET Framework 4.8, no NuGet, no Electron; tiny exe. |
 | Portable data | `<exe>\data` when writable; appdata fallback; relative paths; migration. |
-| Move to a new PC | Transport packs with selected games, LegacyShelf data, sanitized launcher data, and relative portable metadata. |
+| Move to a new PC | Launcher zip + one zip per selected game; launcher data, sanitized launcher data, relative metadata, hidden/unpacked handling, auto-unpack. |
 | Open source, least restrictive | 0BSD; no game art in repo; unofficial disclaimer. |
 | Others can reuse | Registry/folder scan, generic cover index, manual artwork assignment, documented config. |
 
@@ -782,4 +793,5 @@ identity check.
 ---
 
 *End of concept. Next step: sign off on the stack and name, then start M1.*
+
 

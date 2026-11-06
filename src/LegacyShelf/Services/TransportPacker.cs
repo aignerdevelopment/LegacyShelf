@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -11,12 +11,15 @@ using LegacyShelf.Models;
 namespace LegacyShelf.Services
 {
     /// <summary>
-    /// Creates a self-contained folder that can be copied to another PC:
-    /// LegacyShelf.exe + data (settings/artwork) + Games\... + optional sanitized launcher data.
+    /// Creates a transport set: one launcher zip plus one zip per selected game.
+    /// The launcher zip extracts with LegacyShelf.exe at its root; each game zip extracts
+    /// with exactly one game folder at its root.
     /// </summary>
     public sealed class TransportPacker
     {
         private const int BufferSize = 1024 * 1024;
+        private const string LauncherZipName = "LegacyShelf-Launcher.zip";
+        private const string GameMetadataName = ".legacyshelf-game.json";
 
         private readonly IProgress<PackProgress> _progress;
         private readonly CancellationToken _token;
@@ -47,7 +50,6 @@ namespace LegacyShelf.Services
 
             destination = PathUtil.Normalize(destination);
             if (string.IsNullOrWhiteSpace(destination)) throw new InvalidOperationException("Choose a destination folder.");
-
             ValidateDestination(destination, config, games);
 
             foreach (var game in games)
@@ -58,10 +60,13 @@ namespace LegacyShelf.Services
                 }
             }
 
+            var folderNames = MakeUniqueFolderNames(games);
+            var zipNames = folderNames.Select(n => n + ".zip").ToList();
             var artwork = GetArtworkForGames(games);
             var launcherSource = includeLauncherData ? config.Sources.LauncherDataDir : null;
             var launcherInfo = GetLauncherDataInfo(launcherSource);
             var total = EstimateBytes(games, artwork, launcherInfo);
+
             _state.BytesTotal = Math.Max(1, total);
             _state.BytesDone = 0;
             _state.FilesDone = 0;
@@ -72,63 +77,86 @@ namespace LegacyShelf.Services
             CheckFreeSpace(destination, _state.BytesTotal);
 
             var created = false;
+            var stage = Path.Combine(Path.GetTempPath(), "LegacyShelf-Launcher-" + Guid.NewGuid().ToString("N"));
             try
             {
                 Directory.CreateDirectory(destination);
                 created = true;
 
-                _state.Phase = "Copying LegacyShelf";
-                CopyFile(AppPaths.ExePath, Path.Combine(destination, "LegacyShelf.exe"));
-                CopyIfExists(AppPaths.ExePath + ".config", Path.Combine(destination, "LegacyShelf.exe.config"));
-                CopyIfExists(Path.Combine(AppPaths.ExeDir, "README.md"), Path.Combine(destination, "README.md"));
-                CopyIfExists(Path.Combine(AppPaths.ExeDir, "LICENSE"), Path.Combine(destination, "LICENSE"));
-                File.WriteAllText(Path.Combine(destination, "LegacyShelf.portable"), string.Empty, new UTF8Encoding(false));
+                _state.Phase = "Building launcher";
+                Directory.CreateDirectory(stage);
+                CopyFile(AppPaths.ExePath, Path.Combine(stage, "LegacyShelf.exe"));
+                CopyIfExists(AppPaths.ExePath + ".config", Path.Combine(stage, "LegacyShelf.exe.config"));
+                CopyIfExists(Path.Combine(AppPaths.ExeDir, "README.md"), Path.Combine(stage, "README.md"));
+                CopyIfExists(Path.Combine(AppPaths.ExeDir, "LICENSE"), Path.Combine(stage, "LICENSE"));
+                File.WriteAllText(Path.Combine(stage, "LegacyShelf.portable"), string.Empty, new UTF8Encoding(false));
 
-                var dataDir = Path.Combine(destination, "data");
+                var dataDir = Path.Combine(stage, "data");
                 Directory.CreateDirectory(dataDir);
                 CopyArtwork(dataDir, artwork);
                 WriteArtworkManifest(dataDir, games, artwork);
                 CopyIfExists(AppPaths.LocalCoverIndexPath, Path.Combine(dataDir, "cover-index.local.json"));
 
-                _state.Phase = "Copying games";
-                var folderNames = MakeUniqueFolderNames(games);
-                for (var i = 0; i < games.Count; i++)
-                {
-                    _token.ThrowIfCancellationRequested();
-                    var game = games[i];
-                    var gameDest = Path.Combine(destination, "Games", folderNames[i]);
-                    CopyDirectory(game.InstallDir, gameDest);
-                }
-
                 var includedLauncherData = false;
                 if (!string.IsNullOrWhiteSpace(launcherSource) && Directory.Exists(launcherSource))
                 {
                     _state.Phase = "Copying launcher data";
-                    includedLauncherData = CopyLauncherData(destination, launcherSource, games);
+                    includedLauncherData = CopyLauncherData(stage, launcherSource, games);
                 }
 
-                _state.Phase = "Writing settings";
+                _state.Phase = "Writing launcher settings";
                 WritePackConfig(dataDir, config, includedLauncherData);
-                WritePortableGames(dataDir, games, folderNames);
-                WriteTransportReadme(destination);
+                WritePortableGames(dataDir, games, folderNames, zipNames);
+                WriteTransportReadme(stage);
+
+                _state.Phase = "Creating launcher zip";
+                ZipFile.CreateFromDirectory(
+                    stage,
+                    Path.Combine(destination, LauncherZipName),
+                    CompressionLevel.Optimal,
+                    false);
+
+                _state.Phase = "Zipping games";
+                for (var i = 0; i < games.Count; i++)
+                {
+                    _token.ThrowIfCancellationRequested();
+                    CreateGameZip(
+                        games[i],
+                        folderNames[i],
+                        zipNames[i],
+                        Path.Combine(destination, zipNames[i]));
+                }
 
                 _state.Phase = "Finishing";
-                WriteTransportManifest(destination, games, folderNames, includedLauncherData);
+                WriteTransportReadme(destination);
+                var outputBytes = new DirectoryInfo(destination)
+                    .GetFiles("*.zip")
+                    .Sum(f => f.Length);
+
+                WriteTransportManifest(
+                    destination,
+                    games,
+                    folderNames,
+                    zipNames,
+                    includedLauncherData,
+                    outputBytes);
+
                 _state.BytesTotal = Math.Max(_state.BytesTotal, _state.BytesDone);
                 Report(true);
 
                 Log.Info(string.Format(
-                    "Transport pack created: {0} games, {1:0.0} MB, launcher data: {2}",
+                    "Transport pack created: {0} game zip(s), launcher zip, {1:0.0} MB output, launcher data: {2}",
                     games.Count,
-                    _state.BytesDone / (1024.0 * 1024.0),
+                    outputBytes / (1024.0 * 1024.0),
                     includedLauncherData));
 
                 return new PackResult
                 {
                     Destination = destination,
                     GameCount = games.Count,
-                    TotalBytes = _state.BytesDone,
-                    IncludedLauncherData = includedLauncherData
+                    TotalBytes = outputBytes,
+                    IncludedLauncherData = includedLauncherData,
+                    LauncherZip = LauncherZipName
                 };
             }
             catch
@@ -141,10 +169,123 @@ namespace LegacyShelf.Services
                     }
                     catch
                     {
-                        // Leave the partial folder for the user to inspect/delete.
+                        // Leave the partial folder for inspection.
                     }
                 }
                 throw;
+            }
+            finally
+            {
+                try
+                {
+                    if (Directory.Exists(stage)) Directory.Delete(stage, true);
+                }
+                catch
+                {
+                    // Ignore temporary staging cleanup failures.
+                }
+            }
+        }
+
+        private void CreateGameZip(
+            Game game,
+            string folderName,
+            string zipName,
+            string zipPath)
+        {
+            _state.CurrentFile = zipName;
+            Report(true);
+
+            using (var stream = new FileStream(zipPath, FileMode.CreateNew, FileAccess.Write, FileShare.None, BufferSize))
+            using (var archive = new ZipArchive(stream, ZipArchiveMode.Create))
+            {
+                AddDirectoryEntries(archive, game.InstallDir, game.InstallDir, folderName);
+                AddGameFiles(archive, game.InstallDir, game.InstallDir, folderName);
+
+                var metadata = new PortableGameEntry
+                {
+                    Id = game.Id,
+                    Uuid = game.Uuid,
+                    Name = game.Name,
+                    FolderName = folderName,
+                    RelativeDir = folderName,
+                    ExeName = string.IsNullOrWhiteSpace(game.ExePath) ? game.ExeName : Path.GetFileName(game.ExePath),
+                    ZipName = zipName
+                };
+
+                var metadataEntry = archive.CreateEntry(
+                    folderName + "/" + GameMetadataName,
+                    CompressionLevel.Fastest);
+                using (var writer = new StreamWriter(metadataEntry.Open(), new UTF8Encoding(false)))
+                {
+                    writer.Write(JsonUtil.Serialize(metadata, pretty: true));
+                }
+            }
+
+            _state.FilesDone++;
+            Report(true);
+        }
+
+        private void AddDirectoryEntries(ZipArchive archive, string root, string current, string folderName)
+        {
+            foreach (var dir in Directory.GetDirectories(current))
+            {
+                _token.ThrowIfCancellationRequested();
+                if (IsReparsePoint(dir)) continue;
+
+                var relative = RelativePath(root, dir).Replace('\\', '/');
+                if (!HasFiles(dir))
+                {
+                    archive.CreateEntry(folderName + "/" + relative + "/", CompressionLevel.NoCompression);
+                }
+                AddDirectoryEntries(archive, root, dir, folderName);
+            }
+        }
+
+        private void AddGameFiles(ZipArchive archive, string root, string current, string folderName)
+        {
+            foreach (var file in Directory.GetFiles(current))
+            {
+                _token.ThrowIfCancellationRequested();
+                if (IsReparsePoint(file)) continue;
+
+                var relative = RelativePath(root, file);
+                if (string.Equals(relative, GameMetadataName, StringComparison.OrdinalIgnoreCase)) continue;
+
+                var entryName = folderName + "/" + relative.Replace('\\', '/');
+                var entry = archive.CreateEntry(entryName, CompressionLevel.Fastest);
+                try
+                {
+                    entry.LastWriteTime = File.GetLastWriteTime(file);
+                }
+                catch
+                {
+                    // Some timestamps cannot be represented in zip.
+                }
+
+                _state.CurrentFile = file;
+                Report(false);
+
+                using (var input = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, BufferSize))
+                using (var output = entry.Open())
+                {
+                    var buffer = new byte[BufferSize];
+                    int read;
+                    while ((read = input.Read(buffer, 0, buffer.Length)) > 0)
+                    {
+                        _token.ThrowIfCancellationRequested();
+                        output.Write(buffer, 0, read);
+                        _state.BytesDone += read;
+                        Report(false);
+                    }
+                }
+            }
+
+            foreach (var dir in Directory.GetDirectories(current))
+            {
+                _token.ThrowIfCancellationRequested();
+                if (IsReparsePoint(dir)) continue;
+                AddGameFiles(archive, root, dir, folderName);
             }
         }
 
@@ -293,7 +434,7 @@ namespace LegacyShelf.Services
                     }
                     catch
                     {
-                        // Ignore unreadable files during estimation.
+                        // Ignore unreadable files.
                     }
                 }
             }
@@ -301,12 +442,12 @@ namespace LegacyShelf.Services
             return info;
         }
 
-        private bool CopyLauncherData(string destination, string launcherDir, IList<Game> games)
+        private bool CopyLauncherData(string stage, string launcherDir, IList<Game> games)
         {
             var info = GetLauncherDataInfo(launcherDir);
             if (!info.HasAppState && !info.HasCache) return false;
 
-            var target = Path.Combine(destination, "LauncherData");
+            var target = Path.Combine(stage, "LauncherData");
             Directory.CreateDirectory(target);
 
             var appState = Path.Combine(launcherDir, "app-state.json");
@@ -321,15 +462,14 @@ namespace LegacyShelf.Services
                 foreach (var game in launcherData.Games.Values)
                 {
                     if (uuids.Count > 0 && !uuids.Contains(game.Uuid ?? string.Empty)) continue;
-                    var item = new Dictionary<string, object>
+                    sanitized.Add(new Dictionary<string, object>
                     {
                         { "installer_uuid", game.Uuid },
                         { "game_name", game.Name },
                         { "game_description", game.Description },
                         { "game_coverart", game.CoverUrl },
                         { "game_installed_size", game.InstalledSize }
-                    };
-                    sanitized.Add(item);
+                    });
                 }
 
                 var document = new
@@ -338,8 +478,9 @@ namespace LegacyShelf.Services
                     siteData = new { catalog = new[] { new { games = sanitized } } }
                 };
 
-                JsonUtil.Save(Path.Combine(target, "app-state.json"), document, pretty: true);
-                AddWrittenBytes(Path.Combine(target, "app-state.json"));
+                var path = Path.Combine(target, "app-state.json");
+                JsonUtil.Save(path, document, pretty: true);
+                AddWrittenBytes(path);
             }
 
             var cacheSource = Path.Combine(launcherDir, "Cache", "Cache_Data");
@@ -367,17 +508,22 @@ namespace LegacyShelf.Services
         private void WritePackConfig(string dataDir, AppConfig config, bool includeLauncherData)
         {
             var packConfig = ConfigStore.Clone(config);
-            packConfig.Sources.InstallRoots = new List<string> { "Games" };
+            packConfig.Sources.InstallRoots = new List<string> { "." };
             packConfig.Sources.LauncherDataDir = includeLauncherData ? "LauncherData" : null;
             packConfig.Sources.FetchMissingCovers = false;
             packConfig.Ui.Fullscreen = false;
             packConfig.Games.ExeOverrides = new Dictionary<string, string>();
 
-            JsonUtil.Save(Path.Combine(dataDir, "config.json"), packConfig, pretty: true);
-            AddWrittenBytes(Path.Combine(dataDir, "config.json"));
+            var path = Path.Combine(dataDir, "config.json");
+            JsonUtil.Save(path, packConfig, pretty: true);
+            AddWrittenBytes(path);
         }
 
-        private void WritePortableGames(string dataDir, IList<Game> games, IList<string> folderNames)
+        private void WritePortableGames(
+            string dataDir,
+            IList<Game> games,
+            IList<string> folderNames,
+            IList<string> zipNames)
         {
             var manifest = new PortableGamesManifest
             {
@@ -394,10 +540,9 @@ namespace LegacyShelf.Services
                     Uuid = game.Uuid,
                     Name = game.Name,
                     FolderName = folderNames[i],
-                    RelativeDir = Path.Combine("Games", folderNames[i]),
-                    ExeName = string.IsNullOrWhiteSpace(game.ExePath)
-                        ? game.ExeName
-                        : Path.GetFileName(game.ExePath)
+                    RelativeDir = folderNames[i],
+                    ExeName = string.IsNullOrWhiteSpace(game.ExePath) ? game.ExeName : Path.GetFileName(game.ExePath),
+                    ZipName = zipNames[i]
                 });
             }
 
@@ -410,7 +555,9 @@ namespace LegacyShelf.Services
             string destination,
             IList<Game> games,
             IList<string> folderNames,
-            bool includeLauncherData)
+            IList<string> zipNames,
+            bool includeLauncherData,
+            long outputBytes)
         {
             var manifest = new TransportManifest
             {
@@ -418,8 +565,9 @@ namespace LegacyShelf.Services
                 CreatedAt = DateTime.UtcNow.ToString("o"),
                 LegacyShelfVersion = GetVersion(),
                 GameCount = games.Count,
-                TotalBytes = _state.BytesDone,
-                IncludeLauncherData = includeLauncherData
+                TotalBytes = outputBytes,
+                IncludeLauncherData = includeLauncherData,
+                LauncherZip = LauncherZipName
             };
 
             for (var i = 0; i < games.Count; i++)
@@ -429,10 +577,9 @@ namespace LegacyShelf.Services
                     Name = games[i].Name,
                     FolderName = folderNames[i],
                     Uuid = games[i].Uuid,
-                    RelativeDir = Path.Combine("Games", folderNames[i]),
-                    ExeName = string.IsNullOrWhiteSpace(games[i].ExePath)
-                        ? games[i].ExeName
-                        : Path.GetFileName(games[i].ExePath)
+                    RelativeDir = folderNames[i],
+                    ExeName = string.IsNullOrWhiteSpace(games[i].ExePath) ? games[i].ExeName : Path.GetFileName(games[i].ExePath),
+                    ZipName = zipNames[i]
                 });
             }
 
@@ -446,47 +593,25 @@ namespace LegacyShelf.Services
             var readme =
                 "LegacyShelf transport pack\r\n" +
                 "==========================\r\n\r\n" +
-                "This folder is a complete, portable LegacyShelf set. No installer is required.\r\n\r\n" +
-                "1. Copy the whole folder to the new PC (same folder structure).\r\n" +
-                "2. Run LegacyShelf.exe. Windows 10/11 includes the required .NET Framework 4.8.\r\n" +
-                "3. Keep Games\\, data\\, and LegacyShelf.exe together. Paths are relative to this folder.\r\n" +
-                "4. Your selected game folders are in Games\\. LegacyShelf settings and cover art are in data\\.\r\n" +
-                "5. Original launcher metadata and cover cache may be in LauncherData\\ (sanitized; no account data).\r\n" +
-                "6. Saves stored inside the game folders are included. Saves stored elsewhere (Documents, AppData) are not.\r\n" +
-                "7. Do not publish this folder: it contains game files and copyrighted cover art.\r\n\r\n" +
-                "LegacyShelf is unofficial and is not affiliated with Legacy Games.\r\n";
+                "This pack contains LegacyShelf-Launcher.zip and one zip per game.\r\n" +
+                "No installer is required. Windows 10/11 includes .NET Framework 4.8.\r\n\r\n" +
+                "1. Create a folder for your games, for example:  D:\\LegacyGames\r\n" +
+                "2. Extract LegacyShelf-Launcher.zip into that folder.\r\n" +
+                "   LegacyShelf.exe is at the root of the launcher zip.\r\n" +
+                "3. Extract any game zips into the same folder.\r\n" +
+                "   Each game zip contains its game folder at the zip root, e.g.\r\n" +
+                "     100 Doors Escape from School\\100 Doors Escape From School.exe\r\n" +
+                "4. Run LegacyShelf.exe.\r\n\r\n" +
+                "Games that are not extracted are hidden from the shelf but kept in the launcher's metadata.\r\n" +
+                "You can extract them later. If the zips are copied next to LegacyShelf.exe, the launcher's\r\n" +
+                "Unzip button can extract them for you and will offer to delete the zips afterwards.\r\n\r\n" +
+                "Saves stored inside the game folders are included. Saves stored in Documents or AppData\r\n" +
+                "are not automatically copied. Keep the pack private: it contains game files and\r\n" +
+                "copyrighted cover art. LegacyShelf is unofficial and not affiliated with Legacy Games.\r\n";
 
             var path = Path.Combine(destination, "README-TRANSPORT.txt");
             File.WriteAllText(path, readme, new UTF8Encoding(false));
             AddWrittenBytes(path);
-        }
-
-        private void CopyDirectory(string source, string destination)
-        {
-            _token.ThrowIfCancellationRequested();
-            Directory.CreateDirectory(destination);
-
-            foreach (var dir in Directory.GetDirectories(source))
-            {
-                _token.ThrowIfCancellationRequested();
-                if (IsReparsePoint(dir))
-                {
-                    Log.Warn("Skipping reparse-point directory: " + dir);
-                    continue;
-                }
-                CopyDirectory(dir, Path.Combine(destination, Path.GetFileName(dir)));
-            }
-
-            foreach (var file in Directory.GetFiles(source))
-            {
-                _token.ThrowIfCancellationRequested();
-                if (IsReparsePoint(file))
-                {
-                    Log.Warn("Skipping reparse-point file: " + file);
-                    continue;
-                }
-                CopyFile(file, Path.Combine(destination, Path.GetFileName(file)));
-            }
         }
 
         private void CopyIfExists(string source, string destination)
@@ -523,7 +648,7 @@ namespace LegacyShelf.Services
             }
             catch
             {
-                // Timestamps are a nicety.
+                // Optional.
             }
 
             _state.FilesDone++;
@@ -566,11 +691,8 @@ namespace LegacyShelf.Services
             IList<ArtworkToCopy> artwork,
             LauncherDataInfo launcherInfo)
         {
-            long total = 5 * 1024 * 1024; // exe, config, manifests, readme margin
-            foreach (var game in games)
-            {
-                total += DirectorySize(game.InstallDir);
-            }
+            long total = 5 * 1024 * 1024;
+            foreach (var game in games) total += DirectorySize(game.InstallDir);
             foreach (var item in artwork)
             {
                 try { total += new FileInfo(item.SourcePath).Length; }
@@ -603,6 +725,24 @@ namespace LegacyShelf.Services
                 // Let the actual copy report the error.
             }
             return total;
+        }
+
+        private static bool HasFiles(string path)
+        {
+            try
+            {
+                return Directory.EnumerateFiles(path).Any();
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private static string RelativePath(string root, string path)
+        {
+            var normalizedRoot = root.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            return path.Substring(normalizedRoot.Length).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
         }
 
         private static bool IsReparsePoint(string path)

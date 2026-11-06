@@ -258,8 +258,8 @@ namespace LegacyShelf.Views
             var includeLauncher = IncludeLauncherCheckBox.IsChecked == true && _launcherAvailable;
             var confirm = MessageBox.Show(this,
                 string.Format(
-                    "Pack {0} game{1} to:\n\n{2}\n\n" +
-                    "This copies game files and can take a long time. Continue?",
+                    "Create a launcher zip and {0} game zip{1} in:\n\n{2}\n\n" +
+                    "Zipping game files can take a long time and needs free space. Continue?",
                     selected.Count,
                     selected.Count == 1 ? "" : "s",
                     destination),
@@ -299,7 +299,7 @@ namespace LegacyShelf.Views
 
                 var open = MessageBox.Show(this,
                     string.Format(
-                        "Transport pack created.\n\n{0} game{1} · {2}\n{3}\n\nOpen the folder now?",
+                        "Transport pack created.\n\nLegacyShelf-Launcher.zip + {0} game zip{1}\nTotal output: {2}\n{3}\n\nOpen the folder now?",
                         result.GameCount,
                         result.GameCount == 1 ? "" : "s",
                         FormatBytes(result.TotalBytes),

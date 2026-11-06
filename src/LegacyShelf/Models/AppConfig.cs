@@ -58,6 +58,7 @@ namespace LegacyShelf.Models
         public double TileSize { get; set; }
         public string Sort { get; set; }
         public bool ShowHidden { get; set; }
+        public bool ShowAbsentGames { get; set; }
 
         public UiConfig()
         {
@@ -90,3 +91,4 @@ namespace LegacyShelf.Models
         }
     }
 }
+

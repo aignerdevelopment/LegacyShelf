@@ -119,6 +119,13 @@
                             ToolTip="Create a portable set of games for another PC"
                             Margin="8,0,0,0"
                             Click="Pack_Click" />
+                    <Button x:Name="UnzipButton"
+                            Style="{StaticResource GhostButtonStyle}"
+                            Content="Unzip"
+                            AutomationProperties.Name="Unpack game zips"
+                            ToolTip="Extract packed game zips into this folder"
+                            Margin="4,0,0,0"
+                            Click="Unzip_Click" />
                 </StackPanel>
 
                 <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Top">
@@ -241,7 +248,7 @@
                                                        VerticalAlignment="Center" />
                                         </Border>
 
-                                        <!-- Missing badge -->
+                                        <!-- Missing / not-unpacked badge -->
                                         <Border HorizontalAlignment="Left"
                                                 VerticalAlignment="Top"
                                                 Margin="10"
@@ -264,6 +271,29 @@
                                                        FontSize="10"
                                                        FontWeight="SemiBold"
                                                        Foreground="#F2A0A8" />
+                                        </Border>
+                                        <Border HorizontalAlignment="Left"
+                                                VerticalAlignment="Top"
+                                                Margin="10"
+                                                Padding="8,4"
+                                                CornerRadius="6"
+                                                Background="#CC182737"
+                                                BorderBrush="#667CC4FF"
+                                                BorderThickness="1">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsAbsent}" Value="True">
+                                                            <Setter Property="Visibility" Value="Visible" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <TextBlock Text="Not unpacked"
+                                                       FontSize="10"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="#A8D4FF" />
                                         </Border>
 
                                         <!-- Play pill -->
@@ -301,6 +331,9 @@
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding IsMissing}" Value="True">
                                                     <Setter Property="Foreground" Value="#C98A91" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding IsAbsent}" Value="True">
+                                                    <Setter Property="Foreground" Value="#7F8EA3" />
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
@@ -349,11 +382,18 @@
                                Foreground="{StaticResource MutedBrush}"
                                HorizontalAlignment="Center"
                                Margin="0,7,0,0" />
-                    <Button Content="Open sources"
-                            Style="{StaticResource SecondaryButtonStyle}"
-                            HorizontalAlignment="Center"
-                            Margin="0,18,0,0"
-                            Click="Rescan_Click" />
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,18,0,0">
+                        <Button x:Name="EmptySourcesButton"
+                                Content="Open sources"
+                                Style="{StaticResource SecondaryButtonStyle}"
+                                Click="Rescan_Click" />
+                        <Button x:Name="EmptyUnzipButton"
+                                Content="Unpack game zips"
+                                Style="{StaticResource PrimaryButtonStyle}"
+                                Margin="10,0,0,0"
+                                Visibility="Collapsed"
+                                Click="Unzip_Click" />
+                    </StackPanel>
                 </StackPanel>
 
                 <!-- Scan overlay -->

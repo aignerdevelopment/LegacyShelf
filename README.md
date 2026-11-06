@@ -24,8 +24,9 @@ downloads games and never needs an account or the old store.
 - **Minimize while playing** - the launcher gets out of the way and comes back when the game exits.
 - **Portable by default** - settings, artwork, and logs live in `data\` next to the exe when that
   folder is writable; otherwise LegacyShelf falls back to `%APPDATA%\LegacyGamesLauncher`.
-- **Transport packs** - select games and create one self-contained folder with LegacyShelf, its
-  settings/artwork, the selected game folders, and optionally sanitized original launcher data.
+- **Transport packs** - select games and create one launcher zip plus one zip per game, with
+  LegacyShelf settings/artwork and optionally sanitized original launcher data. Games can be
+  unpacked later; missing ones stay hidden but remembered.
 - **Rescan dialog** - add/edit installed directories, edit the original launcher directory, rescan.
 - **Artwork import** — exact SHA-256 matching against the original launcher cache, with icon and
   placeholder fallbacks. Right-click any tile to choose a different image.
@@ -121,42 +122,60 @@ The dialog lets you:
 - choose a new destination folder;
 - include the original launcher catalog and cover cache (sanitized; no account/profile data).
 
-The result is one self-contained folder:
+The result is a set of zips:
 
 ```
 LegacyShelf-Transport-YYYYMMDD-HHmm\
-  LegacyShelf.exe
-  LegacyShelf.exe.config
-  LegacyShelf.portable
+  LegacyShelf-Launcher.zip       exe + data/ + optional LauncherData/ at the zip root
+  100 Doors Escape from School.zip
+  100 Doors Escape from School.zip's root contains exactly that game folder
+  ...
   README-TRANSPORT.txt
   transport-manifest.json
-  Games\
-    <selected game folders>
-  data\
-    config.json              paths relative to this folder ("Games", "LauncherData")
-    artwork\                 selected cover art
-    artwork.json
-    cover-index.local.json
-    portable-games.json      UUIDs + relative paths, so the shelf works without the registry
-  LauncherData\              optional, sanitized
-    app-state.json           public catalog metadata only
-    Cache\Cache_Data\f_*     original cover cache bodies
 ```
 
-Copy the whole folder to the new PC and run `LegacyShelf.exe`. No installer is needed. The pack
-works without the original launcher or the registry because `portable-games.json` carries the game
-IDs, names, relative folders, and executable names.
+On the new PC:
+
+1. Create a folder, for example `D:\LegacyGames`.
+2. Extract **LegacyShelf-Launcher.zip** into it. `LegacyShelf.exe` lands directly in that folder.
+3. Extract any game zips into the same folder. Each zip contains its own game folder at the root.
+4. Run `LegacyShelf.exe`.
+
+You can also copy the game zips next to `LegacyShelf.exe` instead of extracting them. The launcher
+detects them, offers **Unzip**, extracts each zip into the correct folder, and asks whether to delete
+the zips when all of them are unpacked.
+
+The launcher zip contains:
+
+```
+LegacyShelf.exe
+LegacyShelf.exe.config
+LegacyShelf.portable
+data\
+  config.json              roots: ".", "LauncherData"
+  artwork\                 selected cover art
+  artwork.json
+  cover-index.local.json
+  portable-games.json      id, uuid, name, relative folder, zip name, exe
+LauncherData\              optional, sanitized
+  app-state.json           public catalog metadata only
+  Cache\Cache_Data\f_*
+```
+
+Games that are not unpacked yet are **hidden but remembered**. Their metadata stays in
+`data\portable-games.json`; extract them later and they reappear. Enable
+**Show games that are not unpacked** in Library sources to see them with a *Not unpacked* badge.
 
 Notes:
 
-- Game files are **copied**, not moved. Packing 40+ GB takes time and needs free space.
+- Game files are **copied into zips**, not moved. Packing 40+ GB takes time and needs free space.
 - Saves stored inside the selected game folders are included. Saves kept in `Documents` or
   `%APPDATA%` are not automatically copied.
-- The pack contains game files and copyrighted cover art. Do not publish it.
+- The zips contain game files and copyrighted cover art. Do not publish them.
 - The sanitized `LauncherData\app-state.json` contains only public catalog fields; the original
   launcher's account token, profile, reviews, and local storage are never copied.
-- Keep the destination on a writable drive. If the folder is read-only, LegacyShelf has to fall
-  back to `%APPDATA%` and will not see the pack's `data\`.
+- Keep the folder on a writable drive. If it is read-only, LegacyShelf falls back to `%APPDATA%`
+  and cannot see the portable `data\`.
 
 ---
 
@@ -172,7 +191,8 @@ Notes:
 | Arrow keys | Move selection |
 | `F5` | Rescan |
 | `Ctrl+mouse wheel` | Change tile size |
-| **Pack** button | Create a transport pack |
+| **Pack** button | Create a transport pack (launcher zip + game zips) |
+| **Unzip** button | Extract game zips in the launcher folder |
 | Right-click a tile | Play, open folder, change artwork, locate executable, pack this game, hide |
 
 The top-right **⟳** button opens **Library sources**, with:

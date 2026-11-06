@@ -39,7 +39,7 @@
                     <TextBlock Text="Make a portable set"
                                FontSize="22"
                                FontWeight="SemiBold" />
-                    <TextBlock Text="Creates one self-contained folder with LegacyShelf, your settings, cover art, and the selected game folders. Copy the whole folder to the new PC and run LegacyShelf.exe — no installer, no store, no account."
+                    <TextBlock Text="Creates a transport set with LegacyShelf-Launcher.zip and one zip per selected game. On the new PC extract the launcher zip into a folder, then extract any game zips into the same folder - no installer, no store, no account."
                                FontSize="12.5"
                                Foreground="{StaticResource MutedBrush}"
                                TextWrapping="Wrap"
@@ -165,7 +165,7 @@
                     <TextBlock x:Name="EstimateText"
                                FontSize="11.5" Foreground="{StaticResource MutedBrush}"
                                Margin="0,18,0,0" TextWrapping="Wrap" />
-                    <TextBlock Text="Saves stored inside the selected game folders are included. Saves kept in Documents or AppData are not automatically copied. Packing large games takes time and needs free space on the destination drive."
+                    <TextBlock Text="Saves stored inside the selected game folders are included. Saves kept in Documents or AppData are not automatically copied. Zipping large games takes time; expect roughly the size of the selected game folders."
                                FontSize="10.5" Foreground="{StaticResource MutedBrush}"
                                Margin="0,8,0,0" TextWrapping="Wrap" LineHeight="16" />
                 </StackPanel>
@@ -173,7 +173,7 @@
 
             <Border Grid.Row="2" Background="#0E121A" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0">
                 <Grid Margin="30,0">
-                    <TextBlock Text="The pack contains game files and cover art — do not publish it."
+                    <TextBlock Text="The zips contain game files and cover art - do not publish them."
                                FontSize="10.5" Foreground="{StaticResource MutedBrush}"
                                VerticalAlignment="Center" />
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
