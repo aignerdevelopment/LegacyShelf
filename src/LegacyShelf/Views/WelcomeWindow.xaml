@@ -1,0 +1,169 @@
+<Window x:Class="LegacyShelf.Views.WelcomeWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="LegacyShelf"
+        Width="800" Height="720"
+        WindowStyle="None"
+        ResizeMode="NoResize"
+        WindowStartupLocation="Manual"
+        Background="{StaticResource WindowBackgroundBrush}"
+        Foreground="{StaticResource TextBrush}"
+        FontFamily="{StaticResource UiFont}"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True">
+
+    <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="46" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!-- Drag / title bar -->
+            <Grid Grid.Row="0" Background="#0E121A" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="18,0,0,0">
+                    <Image Source="Assets/logo.png" Width="24" Height="24" />
+                    <TextBlock Text="LegacyShelf" FontSize="13" FontWeight="SemiBold"
+                               VerticalAlignment="Center" Margin="10,0,0,0" />
+                    <TextBlock Text="setup" FontSize="12" Foreground="{StaticResource MutedBrush}"
+                               VerticalAlignment="Center" Margin="8,1,0,0" />
+                </StackPanel>
+                <Button Style="{StaticResource CloseButtonStyle}"
+                        Content="&#xE8BB;"
+                        HorizontalAlignment="Right"
+                        Click="Cancel_Click" />
+            </Grid>
+
+            <!-- Content -->
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel Margin="48,34,48,32">
+
+                    <TextBlock Text="Your games. Your shelf. Offline."
+                               FontSize="30" FontWeight="SemiBold"
+                               Foreground="{StaticResource TextBrush}" />
+                    <TextBlock Text="Point LegacyShelf at the folder where your games are installed. It reads the folder and the original launcher's cover art, then builds a shelf you can use forever — no store, no account, no network."
+                               FontSize="13.5"
+                               Foreground="{StaticResource MutedBrush}"
+                               TextWrapping="Wrap"
+                               LineHeight="21"
+                               Margin="0,12,0,30" />
+
+                    <!-- Installed games -->
+                    <TextBlock Text="Installed games folder" FontSize="13" FontWeight="SemiBold" />
+                    <TextBlock Text="The folder that contains one sub-folder per game."
+                               FontSize="11.5" Foreground="{StaticResource MutedBrush}" Margin="0,4,0,9" />
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Border Height="40" Background="#111620" BorderThickness="1" CornerRadius="9">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsKeyboardFocused, ElementName=InstallRootTextBox}" Value="True">
+                                            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <TextBox x:Name="InstallRootTextBox"
+                                     Style="{StaticResource FlatTextBoxStyle}"
+                                     TextChanged="InstallRootTextBox_TextChanged" />
+                        </Border>
+                        <Button Grid.Column="1"
+                                Content="Browse…"
+                                Style="{StaticResource SecondaryButtonStyle}"
+                                Height="40"
+                                Margin="10,0,0,0"
+                                Click="BrowseInstall_Click" />
+                    </Grid>
+                    <TextBlock x:Name="InstallStatusText"
+                               FontSize="11.5"
+                               Foreground="{StaticResource MutedBrush}"
+                               Margin="2,8,0,0"
+                               Text="Choose the folder where your games are installed." />
+
+                    <!-- Launcher data -->
+                    <TextBlock Text="Original launcher data (optional)"
+                               FontSize="13" FontWeight="SemiBold" Margin="0,28,0,0" />
+                    <TextBlock Text="Used once to import the original 600×600 cover art. Without it, games fall back to their icons."
+                               FontSize="11.5" Foreground="{StaticResource MutedBrush}" Margin="0,4,0,9" />
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Border Height="40" Background="#111620" BorderThickness="1" CornerRadius="9">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsKeyboardFocused, ElementName=LauncherDirTextBox}" Value="True">
+                                            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <TextBox x:Name="LauncherDirTextBox"
+                                     Style="{StaticResource FlatTextBoxStyle}"
+                                     TextChanged="LauncherDirTextBox_TextChanged" />
+                        </Border>
+                        <Button Grid.Column="1"
+                                Content="Browse…"
+                                Style="{StaticResource SecondaryButtonStyle}"
+                                Height="40"
+                                Margin="10,0,0,0"
+                                Click="BrowseLauncher_Click" />
+                    </Grid>
+                    <TextBlock x:Name="LauncherStatusText"
+                               FontSize="11.5"
+                               Foreground="{StaticResource MutedBrush}"
+                               Margin="2,8,0,0"
+                               Text="Optional. You can add this later from the rescan dialog." />
+
+                    <CheckBox x:Name="FetchCoversCheckBox"
+                              Style="{StaticResource CheckBoxStyle}"
+                              Content="Fetch missing covers once (requires internet)"
+                              Margin="0,24,0,0" />
+                    <TextBlock Text="Only missing covers are downloaded. They are saved locally, and LegacyShelf stays fully offline afterwards."
+                               FontSize="11"
+                               Foreground="{StaticResource MutedBrush}"
+                               Margin="27,7,0,0"
+                               TextWrapping="Wrap" />
+
+                    <Border Background="#10151E"
+                            BorderBrush="{StaticResource BorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="9"
+                            Padding="14,12"
+                            Margin="0,26,0,0">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE946;" FontFamily="{StaticResource IconFont}"
+                                       FontSize="14" Foreground="{StaticResource AccentBrush}"
+                                       VerticalAlignment="Top" Margin="0,1,10,0" />
+                            <TextBlock Text="The original launcher may stay installed. LegacyShelf only reads it; it never changes your game files."
+                                       FontSize="11.5" Foreground="{StaticResource MutedBrush}"
+                                       TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Footer -->
+                    <Grid Margin="0,34,0,0">
+                        <Button Content="Cancel"
+                                Style="{StaticResource SecondaryButtonStyle}"
+                                HorizontalAlignment="Left"
+                                Click="Cancel_Click" />
+                        <Button x:Name="ScanButton"
+                                Content="Scan library  →"
+                                Style="{StaticResource PrimaryButtonStyle}"
+                                HorizontalAlignment="Right"
+                                Click="Scan_Click" />
+                    </Grid>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+    </Border>
+</Window>
+

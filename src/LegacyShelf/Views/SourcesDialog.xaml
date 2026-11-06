@@ -1,0 +1,185 @@
+<Window x:Class="LegacyShelf.Views.SourcesDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Library sources"
+        Width="720" Height="700"
+        WindowStyle="None"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource WindowBackgroundBrush}"
+        Foreground="{StaticResource TextBrush}"
+        FontFamily="{StaticResource UiFont}"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True">
+
+    <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="46" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="64" />
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0" Background="#0E121A" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="18,0,0,0">
+                    <TextBlock Text="&#xE8B7;" FontFamily="{StaticResource IconFont}"
+                               FontSize="15" Foreground="{StaticResource AccentBrush}"
+                               VerticalAlignment="Center" />
+                    <TextBlock Text="Library sources" FontSize="13" FontWeight="SemiBold"
+                               VerticalAlignment="Center" Margin="10,0,0,0" />
+                </StackPanel>
+                <Button Style="{StaticResource CloseButtonStyle}"
+                        Content="&#xE8BB;"
+                        HorizontalAlignment="Right"
+                        Click="Cancel_Click" />
+            </Grid>
+
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel Margin="30,22,30,18">
+
+                    <TextBlock Text="Installed game directories" FontSize="13" FontWeight="SemiBold" />
+                    <TextBlock Text="Each directory is scanned for game folders. You can add more than one."
+                               FontSize="11.5" Foreground="{StaticResource MutedBrush}" Margin="0,4,0,10" />
+
+                    <Border Background="#111620" BorderBrush="{StaticResource BorderBrush}"
+                            BorderThickness="1" CornerRadius="9" Padding="4">
+                        <ListBox x:Name="RootsList"
+                                 Height="116"
+                                 Background="Transparent"
+                                 BorderThickness="0"
+                                 Foreground="{StaticResource TextBrush}"
+                                 SelectionMode="Single"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                 SelectionChanged="RootsList_SelectionChanged">
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem">
+                                    <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+                                    <Setter Property="Padding" Value="10,8" />
+                                    <Setter Property="Margin" Value="0,1" />
+                                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="ListBoxItem">
+                                                <Border x:Name="Bd" Background="Transparent" CornerRadius="7" Padding="{TemplateBinding Padding}">
+                                                    <ContentPresenter />
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="Bd" Property="Background" Value="#1B2230" />
+                                                    </Trigger>
+                                                    <Trigger Property="IsSelected" Value="True">
+                                                        <Setter TargetName="Bd" Property="Background" Value="#252D3D" />
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </ListBox.ItemContainerStyle>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="&#xE8B7;" FontFamily="{StaticResource IconFont}"
+                                                   FontSize="13" Foreground="{StaticResource AccentBrush}"
+                                                   VerticalAlignment="Center" Margin="2,0,10,0" />
+                                        <TextBlock Text="{Binding}" FontSize="12.5" VerticalAlignment="Center"
+                                                   TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </Border>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                        <Button Content="Add installed directory…"
+                                Style="{StaticResource SecondaryButtonStyle}"
+                                Click="AddRoot_Click" />
+                        <Button x:Name="EditRootButton"
+                                Content="Edit installed directory…"
+                                Style="{StaticResource SecondaryButtonStyle}"
+                                Margin="8,0,0,0"
+                                IsEnabled="False"
+                                Click="EditRoot_Click" />
+                        <Button x:Name="RemoveRootButton"
+                                Content="Remove"
+                                Style="{StaticResource GhostButtonStyle}"
+                                Margin="4,0,0,0"
+                                IsEnabled="False"
+                                Click="RemoveRoot_Click" />
+                    </StackPanel>
+
+                    <Border Height="1" Background="{StaticResource BorderBrush}" Margin="0,26,0,22" />
+
+                    <TextBlock Text="Original launcher data" FontSize="13" FontWeight="SemiBold" />
+                    <TextBlock Text="Used to import cover art and catalog metadata. Optional — the shelf works without it."
+                               FontSize="11.5" Foreground="{StaticResource MutedBrush}" Margin="0,4,0,10" />
+
+                    <Border Background="#111620" BorderBrush="{StaticResource BorderBrush}"
+                            BorderThickness="1" CornerRadius="9" Padding="13,11">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock x:Name="LauncherPathText"
+                                       FontSize="12.5"
+                                       Foreground="{StaticResource TextBrush}"
+                                       TextTrimming="CharacterEllipsis"
+                                       VerticalAlignment="Center"
+                                       Text="Not set" />
+                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                <Button Content="Edit launcher directory…"
+                                        Style="{StaticResource SecondaryButtonStyle}"
+                                        Padding="12,6"
+                                        Click="EditLauncher_Click" />
+                                <Button Content="Clear"
+                                        Style="{StaticResource GhostButtonStyle}"
+                                        Padding="8,6"
+                                        Margin="4,0,0,0"
+                                        Click="ClearLauncher_Click" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <StackPanel Margin="0,24,0,0">
+                        <CheckBox x:Name="ShowHiddenCheckBox"
+                                  Style="{StaticResource CheckBoxStyle}"
+                                  Content="Show hidden games"
+                                  Margin="0,0,0,12" />
+                        <CheckBox x:Name="FetchCoversCheckBox"
+                                  Style="{StaticResource CheckBoxStyle}"
+                                  Content="Fetch missing covers when online" />
+                        <TextBlock Text="One-time helper. Covers are saved locally; normal use is fully offline."
+                                   FontSize="11" Foreground="{StaticResource MutedBrush}"
+                                   Margin="27,6,0,0" />
+                    </StackPanel>
+
+                    <TextBlock x:Name="LastScanText"
+                               FontSize="11.5"
+                               Foreground="{StaticResource MutedBrush}"
+                               Margin="0,26,0,0"
+                               Text="" />
+                </StackPanel>
+            </ScrollViewer>
+
+            <Border Grid.Row="2" Background="#0E121A" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0">
+                <Grid Margin="30,0">
+                    <Button Content="Open data folder"
+                            Style="{StaticResource GhostButtonStyle}"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Center"
+                            Click="OpenDataFolder_Click" />
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <Button Content="Cancel"
+                                Style="{StaticResource SecondaryButtonStyle}"
+                                Click="Cancel_Click" />
+                        <Button Content="Rescan now"
+                                Style="{StaticResource PrimaryButtonStyle}"
+                                Margin="10,0,0,0"
+                                Click="Rescan_Click" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+    </Border>
+</Window>

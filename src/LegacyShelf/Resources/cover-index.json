@@ -1,0 +1,360 @@
+{
+  "version": 1,
+  "source": "legacygames.com catalog metadata; generated for the maintainer's installed collection (no image bytes included)",
+  "covers": [
+    {
+      "uuid": "9d9b6980-57a3-4e98-bd5f-636e677dcc8a",
+      "name": "100 Doors: Escape from School",
+      "url": "https://legacygames.com/wp-content/uploads/Legacy-Games_100-Doors-Escape-from-School.png",
+      "sha256": "b359e64498fc345691385d261626d9b199b28d1f878fe14ea2a833f94f240df1"
+    },
+    {
+      "uuid": "5bf49a07-2c0c-41e6-bc31-f0eb85325e56",
+      "name": "Angelo and Deemon: One Hell of a Quest",
+      "url": "https://legacygames.com/wp-content/uploads/Legacy-Games_Angelo-Deemon_-One-Hell-of-a-Quest.jpg",
+      "sha256": "49ccad5de9d7a1712c7889abc994b982c772c56cc3b22eae255af148403a672b"
+    },
+    {
+      "uuid": "ae5b8664-b015-4d7e-aa57-3d37e3177015",
+      "name": "Around The World 1: Travel to Brazil CE",
+      "url": "https://legacygames.com/wp-content/uploads/Around-The-World-1-Travel-to-Brazil-CE.jpg",
+      "sha256": "ef5fd41e9aba88e3c50c59480142c0381ae12304916dfa54fd9be422a8c7a3b2"
+    },
+    {
+      "uuid": "265405f6-2a7b-4852-a831-081d8d808b92",
+      "name": "Atlantis: Pearls of the Deep",
+      "url": "https://legacygames.com/wp-content/uploads/Legacy-Games_Pearls-of-Atlantis.jpg",
+      "sha256": "d1503ae975d83805a03a983f50990bda08bf61f5165031c1eaced3fc0c8fb249"
+    },
+    {
+      "uuid": "e1b9808d-ac11-406a-97ee-7a87ac44d33e",
+      "name": "Big Adventure: Trip To Europe 6 CE",
+      "url": "https://legacygames.com/wp-content/uploads/BigAdventureTripToEuropeCE6.jpg",
+      "sha256": "bf07bebae1ec86eaf1a12a3dc764c130d8bd3c444fc4b302b12bdc31b7c42b13"
+    },
+    {
+      "uuid": "8acdd625-cc1a-490e-9b6a-dfc031afdb09",
+      "name": "Chimp Quest: Spirit Isle",
+      "url": "https://legacygames.com/wp-content/uploads/ChimpQuestSpiritIsle.jpg",
+      "sha256": "31075a7de1b28b65f2874749dd0fe4b47a6eb6d5e0ce204eb9530b5599f9c563"
+    },
+    {
+      "uuid": "d60a2856-faa0-4405-885b-ef23b738bf69",
+      "name": "Christmas Adventure: Candy Storm",
+      "url": "https://legacygames.com/wp-content/uploads/Christmas-Adventure-Candy-Storm.png",
+      "sha256": "37cb90f21d56fc5f9424e8501e691b0c7a4d8b9bf74122b06b22f1193400b72a"
+    },
+    {
+      "uuid": "8cba2b57-2467-4f10-ab96-a24c5d092f65",
+      "name": "Christmas Fables: The Magic Snowflake CE",
+      "url": "https://legacygames.com/wp-content/uploads/Christmas-Fables-The-Magic-Snowflake-CE.jpg",
+      "sha256": "5b35faec9ace3915f7e34a26217110701bb43be0e020804922d328f574725c7e"
+    },
+    {
+      "uuid": "8a5560c1-e628-4f45-8b25-7f75de12c67e",
+      "name": "City Legends: Ghost of Misty Hill CE",
+      "url": "http://legacygames.com/wp-content/uploads/City-Legends-Ghost-of-Misty-Hill-CE.jpg",
+      "sha256": "8dd0561b3e32027caec54d8e2b860cbe25663f22c8342803943fb63b8dbe907e"
+    },
+    {
+      "uuid": "b8cd4707-bc1d-44c4-90a2-04a07e24640f",
+      "name": "City Legends: Trapped in Mirror CE",
+      "url": "https://legacygames.com/wp-content/uploads/LegacyGames_citylegendstrappedinmirrorce.jpg",
+      "sha256": "4f0e298ebca33d8f6f0dafb27979b2f07aebff8fb1d541318d0e708b386ac836"
+    },
+    {
+      "uuid": "15622de4-df3d-4bd1-beb6-84b753f62b1b",
+      "name": "Criminal Archives 2: Alphabetic Murders CE",
+      "url": "http://legacygames.com/wp-content/uploads/CriminalArchivesAlphabeticMurders.jpg",
+      "sha256": "7b3ab9a3fd3fb3f2fcac71be8bcbcdb0d6e7f54edc4f83fa8e375abbebc10dff"
+    },
+    {
+      "uuid": "69d5c1ad-4287-4159-8de7-2aa32051ba90",
+      "name": "Detective Agency: Gray Tie CE",
+      "url": "http://legacygames.com/wp-content/uploads/DetectiveAgencyGrayTieCE.jpg",
+      "sha256": "ce3a16dad2587664681e879c179eb1a713a00e9f0e303943d22b6d9693a489b4"
+    },
+    {
+      "uuid": "9ff20c87-f5b3-4ffc-aa04-9c93e20bacf7",
+      "name": "Evergarden",
+      "url": "https://legacygames.com/wp-content/uploads/Legacy-Games_Evergarden.jpg",
+      "sha256": "e92ad1a71d4fc334b2665a79670f5ae348411e076ac955cb6967e6ebd439c0a1"
+    },
+    {
+      "uuid": "e9ca1608-7662-45a2-8f13-ecc8411162c3",
+      "name": "Facility 47",
+      "url": "https://legacygames.com/wp-content/uploads/LegacyGames_Facility47.jpg",
+      "sha256": "fdd80d9811df9885ee20e2d86b4c5fffee3fc0d9f151100143deced4ee500ca6"
+    },
+    {
+      "uuid": "6c29a543-08ad-42b4-8d49-734758ec3cff",
+      "name": "Family Mysteries: Poisonous Promises",
+      "url": "https://legacygames.com/wp-content/uploads/Legacy-Games_Family-Mysteries_-Poisonous-Promises.jpg",
+      "sha256": "c0a767b12e49fd499b1e8a1db395e7b33a426788406d31345e381a4c929baab0"
+    },
+    {
+      "uuid": "342f9d65-19a0-4728-9eb0-e3cf1f46975e",
+      "name": "Gallery of Things: Reveries",
+      "url": "https://legacygames.com/wp-content/uploads/Gallery-of-Things-Reveries.jpg",
+      "sha256": "1eaff515eb8ac2b55f487798b35512f6d865f7182a38c0963581adbb005c0322"
+    },
+    {
+      "uuid": "8ccad267-96e4-41b2-8d10-3aa06a85f54d",
+      "name": "Gems of Destiny: Homeless Dwarf",
+      "url": "http://legacygames.com/wp-content/uploads/Gems-of-Destiny_lootDropS2x_1-e1686091340492.jpg",
+      "sha256": "fa636758454f483c71f557d2dfa3377b33fafd6f37e4b03b27122f5d460a5f8b"
+    },
+    {
+      "uuid": "76eb33b8-790a-4813-9cd5-e1097469bcb7",
+      "name": "Glass Masquerade: Origins",
+      "url": "https://legacygames.com/wp-content/uploads/LegacyGames_GlassMasqueradeOrigins.jpg",
+      "sha256": "6dab37ae892f3a4952370fbc88ca533598506690a0fdddbb15c99ce3a8765787"
+    },
+    {
+      "uuid": "6b223af5-eccb-48bc-a0a4-b322f79c8f82",
+      "name": "Gloomy Tales: One Way Ticket CE",
+      "url": "http://legacygames.com/wp-content/uploads/Gloomy-Tales-One-Way-Ticket-CE.jpg",
+      "sha256": "e3c74ae342183226eb9cf4c7f422a93871781e90df99322d3ced21d89ede27cc"
+    },
+    {
+      "uuid": "6a8b3aa3-7293-41f0-9e11-12494206e6cb",
+      "name": "Hook",
+      "url": "https://legacygames.com/wp-content/uploads/Legacy-Games_Hook.jpg",
+      "sha256": "62fcda124cbbf0e51d7ed1b92fafc64cde2efdb96d52cd0f2c2aae284e100ce1"
+    },
+    {
+      "uuid": "5971fc1c-e4c8-4c9c-8304-4ac02d54b9c1",
+      "name": "I Love Finding Cats and Pups",
+      "url": "http://legacygames.com/wp-content/uploads/ILoveFindingCatsAndPups.jpg",
+      "sha256": "df26102ad511ef2be84a15f5e005d5164b45d75fa015d068274076878bab0898"
+    },
+    {
+      "uuid": "2b556924-fc35-464e-b60b-24ea3548a317",
+      "name": "I Love Finding Wild Friends CE",
+      "url": "https://legacygames.com/wp-content/uploads/I-Love-Finding-Wild-Friends-CE.jpg",
+      "sha256": "1538e2ca4af872534b5bebe3b2f19768c0b47cf8ec10d1b8fd0deafc52fc1cb7"
+    },
+    {
+      "uuid": "bd3c280e-6c21-4955-b51d-b4d7a3a02f01",
+      "name": "Klocki",
+      "url": "https://legacygames.com/wp-content/uploads/Legacy-Games_Klocki.jpg",
+      "sha256": "4d84653799eccdad96ec5ea2fac37f1fee127dd209f4b7c8002a3e40b75a7cd9"
+    },
+    {
+      "uuid": "cc584db8-0b8b-460c-bf7a-04c958b50008",
+      "name": "Lilas Sky Ark",
+      "url": "https://legacygames.com/wp-content/uploads/LilasSkyArk.jpg",
+      "sha256": "a514377cdb89e26929e432a1c92570fe15ce4f6e96230d7738723e9adf96e1fd"
+    },
+    {
+      "uuid": "20f32bdf-d1b0-401c-bf3d-73a7737d770b",
+      "name": "LIT: Bend the Light",
+      "url": "https://legacygames.com/wp-content/uploads/Legacy-Games_LITBendtheLight.png",
+      "sha256": "0abba3c23a1c7490907b2671989f08dceadc0aed07423f06cad02b9f8f8e6ac3"
+    },
+    {
+      "uuid": "88e3219c-13d1-4fbd-a357-f418a5174305",
+      "name": "Looking for Aliens CE",
+      "url": "http://legacygames.com/wp-content/uploads/LookingForAliensCE.jpg",
+      "sha256": "5954bc05e046027df2b08002aec36168381e383ce2f36ca00e81faa780a2ba08"
+    },
+    {
+      "uuid": "8cadb07c-f6c6-4bcf-81ba-a24aeaacac34",
+      "name": "Lost and Found Agency 1 CE",
+      "url": "https://legacygames.com/wp-content/uploads/Lost-and-Found-Agency-1-CE.jpg",
+      "sha256": "11d4733f7ca45ccd2ffdfdd31a21e32c1982523e4c97570118eeafda809953bd"
+    },
+    {
+      "uuid": "020595da-2cb8-4f92-b788-2bd6ca6e1599",
+      "name": "Lost Lands: Sand Captivity CE",
+      "url": "http://legacygames.com/wp-content/uploads/LostLandsSandCaptivityCE.jpg",
+      "sha256": "2f76a9be678a2253ae1b075522008fbd8accc43a772b4437efba63a2a2a0d3de"
+    },
+    {
+      "uuid": "e73adad4-5512-4894-afdb-dfef4ea2f198",
+      "name": "Lunar Axe",
+      "url": "http://legacygames.com/wp-content/uploads/LunarAxe.jpg",
+      "sha256": "0d1f6bacc9041a9642440e1b7d8723f688aad881654800130f1ef612813d382b"
+    },
+    {
+      "uuid": "c454ae12-8c29-4465-81db-3914feb732c9",
+      "name": "Lyne",
+      "url": "https://legacygames.com/wp-content/uploads/Legacy-Games_LYNE.jpg",
+      "sha256": "230f1bbc29b971a3f465eae179f8cee14b54c5b17e71933fff629ada3b2e1a54"
+    },
+    {
+      "uuid": "95b2b77b-6852-45f7-b9c1-ae7d269ea2ad",
+      "name": "Mystery Box: Hidden Secrets",
+      "url": "http://legacygames.com/wp-content/uploads/MysteryBoxHiddenSecrets.jpeg",
+      "sha256": "90e2bbdd8cfa2faf92a5de73d43b9517ce7408e7d2847bd5348e6c29f7e747f3"
+    },
+    {
+      "uuid": "bbadae68-32aa-415a-ad6c-e6d9155707b1",
+      "name": "Mystical Riddles Ghostly Park CE",
+      "url": "https://legacygames.com/wp-content/uploads/Mystical-Riddles-Ghostly-Park-CE.jpg",
+      "sha256": "095c24c0b962864ccb82baa73488a09da0dc2b944732094107e54e3448e4a048"
+    },
+    {
+      "uuid": "88bb6b94-6aee-412b-9cc6-56c6cffc0361",
+      "name": "Naboki",
+      "url": "https://legacygames.com/wp-content/uploads/Legacy-Games_Naboki.jpg",
+      "sha256": "9e2e0287b226afaa1da3b5ebdc90485259b5b2fefd04789c909094e45c116ab6"
+    },
+    {
+      "uuid": "c8512f2b-4b58-4700-93c3-d61307cdf43a",
+      "name": "NagiQ 2: Treasure Hunt",
+      "url": "https://legacygames.com/wp-content/uploads/Legacy-Games-NagiQ2TreasureHunt.png",
+      "sha256": "25604f05e222921ee3e56dd179543f34c68341300256dd83bf6fe17f8a35c8cb"
+    },
+    {
+      "uuid": "c80e616c-fad2-4fcc-b9eb-e4bfee400b25",
+      "name": "New York Mysteries: Power of Art CE",
+      "url": "http://legacygames.com/wp-content/uploads/NewYorkMysteriesPowerOfArtCE.jpg",
+      "sha256": "469a1b68e13283efb36fbfda6d6bc869c260149d1f041a00b6289776be19f6f2"
+    },
+    {
+      "uuid": "fa55eec5-496a-458c-a746-5ece45879682",
+      "name": "Nordic Storm Solitaire",
+      "url": "https://legacygames.com/wp-content/uploads/nordic-storm-solitaire.jpg",
+      "sha256": "fd7233199a3ff7ceb8b3fe0ea7a628033d68f0088db40ea5638b81f96c72abf1"
+    },
+    {
+      "uuid": "f41fdebc-ea11-454d-b45d-732142b6fd9d",
+      "name": "Pearls of Atlantis: The Cove",
+      "url": "https://legacygames.com/wp-content/uploads/PearlsOfAtlantisTheCove.jpg",
+      "sha256": "2278e5d48a2973ede743a197c643900bb2683e9ced3b44342c2c5cbc30390bd7"
+    },
+    {
+      "uuid": "53a82361-28e8-4c1b-a331-a669517a2f13",
+      "name": "Please Touch The Artwork",
+      "url": "https://legacygames.com/wp-content/uploads/PleaseTouchTheArtwork.png",
+      "sha256": "5849624904a5a1863ecbcacd12753ddaaee0eec749f10d77d5f114ff1372c6e8"
+    },
+    {
+      "uuid": "464538e2-0531-49c9-8bb9-da436944157c",
+      "name": "Poly Vita",
+      "url": "http://legacygames.com/wp-content/uploads/LegacyGames_PolyVita.jpg",
+      "sha256": "059dac4226af51efaad8acd54565f26689fdf0b45f65799ce512de019058892d"
+    },
+    {
+      "uuid": "f36cfbce-4611-41d3-b49d-93d0f3b5ccce",
+      "name": "Prune",
+      "url": "https://legacygames.com/wp-content/uploads/Legacy-Games_Prune.jpg",
+      "sha256": "8002eeaacb4c08d023c71303033ce1a5b0a958b62930f12e081d05c7679fe283"
+    },
+    {
+      "uuid": "adafdc12-cc85-4918-bbc0-18e93f44a909",
+      "name": "Road Trip: Europe",
+      "url": "https://legacygames.com/wp-content/uploads/Legacy-Games_Road-Trip_-Europe.jpg",
+      "sha256": "c510efef5c2f8a89c3f1b5442ffa1b333b6e25da42b3f82cf6f42a0d61aea8d2"
+    },
+    {
+      "uuid": "5e5c8cdd-2725-43f1-b0a8-6df52280b816",
+      "name": "Road Trip: USA",
+      "url": "https://legacygames.com/wp-content/uploads/Legacy-Games_Road-Trip_-USA.jpg",
+      "sha256": "fbac7bd1051ff00b1a24541c6fbe8999a7f900b6c586fbf4c96427a8c4f34a6a"
+    },
+    {
+      "uuid": "b839c68a-1626-46c7-a378-5625395e95ad",
+      "name": "Road Trip: USA 2 West CE",
+      "url": "https://legacygames.com/wp-content/uploads/Legacy-Games_Road-Trip-USA-II_-West.jpg",
+      "sha256": "a28ad700effdaf3221b290477543ce1d489973583156ac99b3ee7bd5405026f0"
+    },
+    {
+      "uuid": "3b943ce3-3468-4cf7-a111-71db40d1d546",
+      "name": "Rose Riddle 2: Werewolf Shadow",
+      "url": "https://legacygames.com/wp-content/uploads/Rose-Riddle-2_Icon-e1668522704384.jpg ",
+      "sha256": "c3b3f09af70b5053a704793c5aff4e3c0f5322395d5fbb7d0ae3c77520966d66"
+    },
+    {
+      "uuid": "0d5d4f59-bf10-4196-91a5-d6feab41fc52",
+      "name": "Rose Riddle: Fairy Tale Detective CE",
+      "url": "https://legacygames.com/wp-content/uploads/RoseRiddleFairyTaleDetectiveCE.jpg",
+      "sha256": "d960edbf5ef1800c984f8f6843e2d02f6034fc15ced902ec621d82e13bc6a54d"
+    },
+    {
+      "uuid": "7ac830fa-ed4e-4447-96b7-59201cca3c87",
+      "name": "Rosette and Words",
+      "url": "https://legacygames.com/wp-content/uploads/Legacy-Games_RosetteAndWords.png",
+      "sha256": "503abfb0e0c3804da203ade8b95c50823c8aeceb56f2ac3db8d15b1a244d31b3"
+    },
+    {
+      "uuid": "e6670311-ad54-44f3-8df7-0a0767d05c24",
+      "name": "Royal Romances: Cursed Hearts CE",
+      "url": "https://legacygames.com/wp-content/uploads/Royal-Romances-Cursed-Hearts.jpg",
+      "sha256": "f7ddd84bc56f42913d659d5463e3a9c6d5a9d1f9287a52070c777b6e64740118"
+    },
+    {
+      "uuid": "42d3d979-80a9-4989-861e-9721a65b60b1",
+      "name": "Royal Romances: Forbidden Magic CE",
+      "url": "http://legacygames.com/wp-content/uploads/RoyalRomancesForbiddenMaicCE.jpg",
+      "sha256": "66bf85319dcd54568254a49d60c41e1c1a4cd8366d594aca1c6b899c8dac9dff"
+    },
+    {
+      "uuid": "eafc172d-5208-4d7a-9be9-0a136ff21216",
+      "name": "Summertime Madness",
+      "url": "http://legacygames.com/wp-content/uploads/LegacyGames_SummertimeMadness.jpg",
+      "sha256": "c3e32a4ff5013d91424c338edc5259b041da1545fdbec28229f60966bb77da76"
+    },
+    {
+      "uuid": "3ec9152b-5124-410c-b58d-d1146664bdbf",
+      "name": "Tearstone: Thieves of the Heart CE",
+      "url": "https://legacygames.com/wp-content/uploads/LegacyGames_TearstoneTheivesoftheHeartCE.jpg",
+      "sha256": "9aee335c3830d457db148213d9f58df4431d696477d8026334b8547462fc0532"
+    },
+    {
+      "uuid": "349d924e-a511-4e48-af93-8d287f80260e",
+      "name": "The Da Vinci Cryptex 1",
+      "url": "https://legacygames.com/wp-content/uploads/output-onlinepngtools.jpg",
+      "sha256": "3f79ab93773ca81fbf49f73af6e6d5aa536ce6bcf32c81e8b4fedc250e25e692"
+    },
+    {
+      "uuid": "ae3f9477-f812-42d5-85c4-cec8bd90981f",
+      "name": "The Lost Ashford Ring",
+      "url": "https://legacygames.com/wp-content/uploads/The-Lost-Ashford-Ring.jpg",
+      "sha256": "04c2c11aed81c4430155dfce7f2394737a9e8e8523f69658fc266b13f87046c5"
+    },
+    {
+      "uuid": "fad5198e-5c92-4493-b498-d77dc0ba6111",
+      "name": "The Wild Case",
+      "url": "https://legacygames.com/wp-content/uploads/Legacy-Games_The-Wild-Case.jpg",
+      "sha256": "9624005aee6fe94dae2c03f15f7ef9340ad77e2b59cdc6a01c33b7a3ebb404f3"
+    },
+    {
+      "uuid": "1b204df0-568c-4c6b-87d1-eee2e3665fe5",
+      "name": "Time Travel: Escape Room Game",
+      "url": "https://legacygames.com/wp-content/uploads/Time-Travel-Escape-Room-Game.png",
+      "sha256": "7e81673b3c054f3b3ef7a71198c79cd1f248dc1f826859794915169907dede7c"
+    },
+    {
+      "uuid": "988f9e23-8c54-45ad-a236-57637dee5e18",
+      "name": "Unsolved Case: Murderous Script CE",
+      "url": "http://legacygames.com/wp-content/uploads/UnsolvedCaseMurderousScriptCE.jpg",
+      "sha256": "d8c3c945e0e421a9af7d8fa04f07481ea31e02a8e646a39280e2349521f729d0"
+    },
+    {
+      "uuid": "708ed6d4-6c22-4894-a8dc-705d5b7b67bc",
+      "name": "Up Left Out",
+      "url": "https://legacygames.com/wp-content/uploads/Legacy-Games_Up-Left-Out.jpg",
+      "sha256": "a34dc43ff8037b9988bed2eb437ea6b03612a1fc5141fa4286e08e72817942bf"
+    },
+    {
+      "uuid": "795f44bf-ad46-41e2-9528-512048969d73",
+      "name": "Varenje",
+      "url": "https://legacygames.com/wp-content/uploads/Legacy-Games_Varenje.jpg",
+      "sha256": "eb52b11311e42e71751aa1e232732ed44fbd1b2e2b0a9dd12d5d2315dd017365"
+    },
+    {
+      "uuid": "4636e44c-7191-446f-b85b-25a661212de1",
+      "name": "Wisbey Mystery",
+      "url": "https://legacygames.com/wp-content/uploads/Wisbey-Mystery.jpg",
+      "sha256": "f19d592590b8f5cf3522fdee8557be001586bd51a495612426c9cf4d9f1b5df1"
+    },
+    {
+      "uuid": "e74335b1-b9ad-4e34-a706-27c733ec1742",
+      "name": "Word Of The Law: Death Mask CE",
+      "url": "https://legacygames.com/wp-content/uploads/LegacyGames_WordOfTheLaw_DeathMask.jpg",
+      "sha256": "8d315cf8d349f58a8607dcd643b3634ca1ec7e1f525e34f071b050bb11014175"
+    }
+  ]
+}

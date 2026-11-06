@@ -1,0 +1,44 @@
+name: build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+
+      - name: Build
+        run: dotnet build LegacyShelf.sln -c Release --nologo
+
+      - name: Smoke-test the scanner
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force "testlib\Test Game" | Out-Null
+          Copy-Item "$env:WINDIR\System32\cmd.exe" "testlib\Test Game\Test Game.exe"
+          $exe = Resolve-Path "src\LegacyShelf\bin\Release\net48\LegacyShelf.exe"
+          $report = Join-Path $PWD "report.json"
+          $process = Start-Process -FilePath $exe -ArgumentList @(
+            "--scan-report", $report,
+            "--install-root", (Join-Path $PWD "testlib"),
+            "--no-art"
+          ) -Wait -PassThru
+          if ($process.ExitCode -ne 0) { throw "Scanner exited with $($process.ExitCode)" }
+          $data = Get-Content $report -Raw | ConvertFrom-Json
+          if ($data.count -ne 1) { throw "Expected 1 game, got $($data.count)" }
+          Write-Host "Scanner smoke test passed: $($data.count) game."
+
+      - name: Upload release binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: LegacyShelf-win-x64
+          path: src/LegacyShelf/bin/Release/net48/LegacyShelf.exe

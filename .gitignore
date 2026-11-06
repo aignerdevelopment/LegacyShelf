@@ -1,0 +1,20 @@
+# Build output
+bin/
+obj/
+dist/
+*.user
+*.suo
+.vs/
+
+# Local application data / test artifacts
+data/
+artwork/
+logs/
+scan-report.json
+report.json
+*.tmp
+*.bad-*.json
+
+# OS noise
+.DS_Store
+Thumbs.db
