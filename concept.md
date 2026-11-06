@@ -321,7 +321,7 @@ The original cache is locked while the launcher runs and may disappear. LegacySh
 **imports** chosen images into its own folder:
 
 ```
-%APPDATA%\LegacyGamesLauncher\
+<exe folder>\data\                (portable; %APPDATA% fallback when not writable)
   artwork\
     <stable-id>.jpg
   artwork.json
@@ -459,8 +459,12 @@ F:\LegacyGamesDev\
 
 ### 9.1 Paths
 
-- Config/artwork/logs: `%APPDATA%\LegacyGamesLauncher\`
-- Portable mode: if `LegacyShelf.portable` exists next to the exe, use `<exe dir>\data\`.
+- **Portable by default:** if `<exe dir>\data\` is writable, config/artwork/logs live there.
+- **Fallback:** if the exe folder is not writable (e.g. Program Files), use
+  `%APPDATA%\LegacyGamesLauncher\`. Existing appdata data is migrated once into the portable folder.
+- `LegacyShelf.portable` is an optional explicit marker, no longer required.
+- Paths under the executable directory are stored relatively in `config.json` so the whole folder
+  can move. `Games` in a transport pack resolves to `<exe dir>\Games`.
 - Logs: `logs\app.log`, rolling at 1 MB × 3 files.
 - No data in the registry (read-only access to the original launcher's keys).
 
@@ -532,6 +536,35 @@ F:\LegacyGamesDev\
   }
 }
 ```
+
+### 9.5 Transport packs
+
+`Pack` in the top bar (and **Pack this game for transport…** in the tile context menu) creates a
+self-contained folder:
+
+```
+LegacyShelf-Transport-YYYYMMDD-HHmm\
+  LegacyShelf.exe
+  LegacyShelf.exe.config
+  LegacyShelf.portable
+  README-TRANSPORT.txt
+  transport-manifest.json
+  Games\<selected game folders>\
+  data\
+    config.json              roots: "Games", "LauncherData"
+    artwork\
+    artwork.json
+    cover-index.local.json
+    portable-games.json      id, uuid, name, relative folder, exe
+  LauncherData\              optional and sanitized
+    app-state.json           public catalog fields only
+    Cache\Cache_Data\f_*
+```
+
+`LibraryScanner` merges `portable-games.json` before the registry/folder scan, preserving installer
+UUIDs and using relative paths. That makes the pack work on a new PC without the old registry, the
+installer, the store, or the original launcher. The sanitizer never copies `user`, `token`,
+`profile`, reviews, cookies, local storage, or logs.
 
 ---
 
@@ -684,6 +717,8 @@ The first usable build (M1–M2) is deliberately small; artwork polish and edge 
 | Top-right rescan button | `⟳` opens “Library sources”. |
 | Dialog actions | Add installed directory · Edit installed directory · Edit launcher directory · Rescan. |
 | Small, no big dependencies | WPF/.NET Framework 4.8, no NuGet, no Electron; tiny exe. |
+| Portable data | `<exe>\data` when writable; appdata fallback; relative paths; migration. |
+| Move to a new PC | Transport packs with selected games, LegacyShelf data, sanitized launcher data, and relative portable metadata. |
 | Open source, least restrictive | 0BSD; no game art in repo; unofficial disclaimer. |
 | Others can reuse | Registry/folder scan, generic cover index, manual artwork assignment, documented config. |
 

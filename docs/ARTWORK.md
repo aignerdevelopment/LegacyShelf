@@ -43,7 +43,8 @@ The script only writes metadata and hashes. It does not copy cover images into t
 - Covers: JPEG quality 92.
 - Images with alpha / icons: PNG.
 - The UI decodes a smaller thumbnail for the grid; the full file is kept for future use.
-- Files are stored in `%APPDATA%\LegacyGamesLauncher\artwork\` and keyed by the stable game id.
+- Files are stored in `<exe folder>\data\artwork\` (or the `%APPDATA%` fallback) and keyed by the
+  stable game id.
 
 ## Legal
 

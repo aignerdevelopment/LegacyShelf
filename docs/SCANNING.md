@@ -9,6 +9,12 @@
    - `game_name`, `game_description`, `game_coverart`, `installer_uuid`, `game_installed_size`
 4. **Artwork cache:** `Cache\Cache_Data\f_*` (raw image bodies).
 
+## Transport manifest
+
+If `data\portable-games.json` exists, it is merged **before** the registry and folder scan. Each
+entry supplies the installer UUID, display name, relative game folder, and executable name. This is
+how a transport pack works on a new PC without the original registry or installer.
+
 ## Merge rules
 
 - Normalize every path and deduplicate case-insensitively.

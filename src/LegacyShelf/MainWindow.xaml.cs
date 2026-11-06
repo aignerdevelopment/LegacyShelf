@@ -616,6 +616,41 @@ namespace LegacyShelf
 
         // ---------------------------------------------------------------- sources / rescan
 
+        private void Pack_Click(object sender, RoutedEventArgs e)
+        {
+            OpenTransportPack(null);
+        }
+
+        private void PackGameMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            var item = GetMenuItemGame(sender);
+            OpenTransportPack(item != null ? item.Id : null);
+        }
+
+        private void OpenTransportPack(string preselectGameId)
+        {
+            if (_scanning)
+            {
+                ShowToast("Wait for the scan to finish before packing");
+                return;
+            }
+
+            if (_games.Count == 0)
+            {
+                ShowToast("Add games before making a transport pack");
+                return;
+            }
+
+            var dialog = new TransportDialog(
+                _config,
+                _games.Select(i => i.Game).ToList(),
+                preselectGameId)
+            {
+                Owner = this
+            };
+            dialog.ShowDialog();
+        }
+
         private void Rescan_Click(object sender, RoutedEventArgs e)
         {
             var dialog = new SourcesDialog(_config, BuildScanSummary())

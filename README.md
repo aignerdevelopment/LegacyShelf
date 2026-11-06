@@ -21,8 +21,12 @@ downloads games and never needs an account or the old store.
 - **Live search** — filters by game name, folder, or executable; `Ctrl+F` focuses it.
 - **Double-click to play** — or select a tile and press `Enter`.
 - **Full screen** — `Alt+Enter` toggles; `Esc` or `Alt+Enter` returns.
-- **Minimize while playing** — the launcher gets out of the way and comes back when the game exits.
-- **Rescan dialog** — add/edit installed directories, edit the original launcher directory, rescan.
+- **Minimize while playing** - the launcher gets out of the way and comes back when the game exits.
+- **Portable by default** - settings, artwork, and logs live in `data\` next to the exe when that
+  folder is writable; otherwise LegacyShelf falls back to `%APPDATA%\LegacyGamesLauncher`.
+- **Transport packs** - select games and create one self-contained folder with LegacyShelf, its
+  settings/artwork, the selected game folders, and optionally sanitized original launcher data.
+- **Rescan dialog** - add/edit installed directories, edit the original launcher directory, rescan.
 - **Artwork import** — exact SHA-256 matching against the original launcher cache, with icon and
   placeholder fallbacks. Right-click any tile to choose a different image.
 - **Tiny footprint** — WPF on .NET Framework 4.8; no Electron, no bundled browser, no NuGet runtime
@@ -66,19 +70,26 @@ Create a distributable zip with:
 .\tools\build.ps1
 ```
 
-The app writes its own data to `%APPDATA%\LegacyGamesLauncher\` by default:
+The app is **portable by default**. It writes its data to `<exe folder>\data\` when that folder is
+writable:
 
 ```
-config.json            user settings and source folders
-library.json           last scan (disposable)
-artwork.json           artwork choices and overrides
-artwork\               imported and normalized cover images
-cover-index.local.json learned cover hashes
-logs\app.log           rolling log
+data\config.json            user settings and source folders
+data\library.json           last scan (disposable)
+data\artwork.json           artwork choices and overrides
+data\artwork\               imported and normalized cover images
+data\cover-index.local.json learned cover hashes
+data\portable-games.json    only present in a transport pack
+data\logs\app.log           rolling log
 ```
 
-**Portable mode:** create an empty file named `LegacyShelf.portable` next to `LegacyShelf.exe`.
-The app will then use `<exe folder>\data\` instead of `%APPDATA%`.
+If `<exe folder>\data\` cannot be created or written (for example LegacyShelf was placed in
+`Program Files`), it falls back to `%APPDATA%\LegacyGamesLauncher\`. On first launch it migrates an
+existing appdata installation into the portable data folder.
+
+An empty `LegacyShelf.portable` marker is still honored as an explicit intent marker, but it is no
+longer required. Paths under the executable folder are stored relative in `config.json`, so the
+whole portable folder can be moved.
 
 ---
 
@@ -99,6 +110,56 @@ it automatically.
 
 ---
 
+## Transport packs (move everything to a new PC)
+
+Use the **Pack** button in the top bar, or right-click a game and choose
+**Pack this game for transport…**.
+
+The dialog lets you:
+
+- pick any set of installed games (or all of them);
+- choose a new destination folder;
+- include the original launcher catalog and cover cache (sanitized; no account/profile data).
+
+The result is one self-contained folder:
+
+```
+LegacyShelf-Transport-YYYYMMDD-HHmm\
+  LegacyShelf.exe
+  LegacyShelf.exe.config
+  LegacyShelf.portable
+  README-TRANSPORT.txt
+  transport-manifest.json
+  Games\
+    <selected game folders>
+  data\
+    config.json              paths relative to this folder ("Games", "LauncherData")
+    artwork\                 selected cover art
+    artwork.json
+    cover-index.local.json
+    portable-games.json      UUIDs + relative paths, so the shelf works without the registry
+  LauncherData\              optional, sanitized
+    app-state.json           public catalog metadata only
+    Cache\Cache_Data\f_*     original cover cache bodies
+```
+
+Copy the whole folder to the new PC and run `LegacyShelf.exe`. No installer is needed. The pack
+works without the original launcher or the registry because `portable-games.json` carries the game
+IDs, names, relative folders, and executable names.
+
+Notes:
+
+- Game files are **copied**, not moved. Packing 40+ GB takes time and needs free space.
+- Saves stored inside the selected game folders are included. Saves kept in `Documents` or
+  `%APPDATA%` are not automatically copied.
+- The pack contains game files and copyrighted cover art. Do not publish it.
+- The sanitized `LauncherData\app-state.json` contains only public catalog fields; the original
+  launcher's account token, profile, reviews, and local storage are never copied.
+- Keep the destination on a writable drive. If the folder is read-only, LegacyShelf has to fall
+  back to `%APPDATA%` and will not see the pack's `data\`.
+
+---
+
 ## Controls
 
 | Input | Action |
@@ -111,7 +172,8 @@ it automatically.
 | Arrow keys | Move selection |
 | `F5` | Rescan |
 | `Ctrl+mouse wheel` | Change tile size |
-| Right-click a tile | Play, open folder, change artwork, locate executable, hide |
+| **Pack** button | Create a transport pack |
+| Right-click a tile | Play, open folder, change artwork, locate executable, pack this game, hide |
 
 The top-right **⟳** button opens **Library sources**, with:
 
@@ -178,13 +240,13 @@ src\LegacyShelf\               WPF application
   Assets\                      original project logo/icon
   Controls\                    game tile view model
   Models\                      config, game, artwork, cache models
-  Services\                    scanning, registry, artwork, launching, config, logging
+  Services\                    scanning, registry, artwork, launching, transport packing, config, logging
   Themes\                      dark WPF theme
-  Views\                       welcome and library-sources dialogs
+  Views\                       welcome, sources, and transport-pack dialogs
   Resources\cover-index.json   public metadata/hashes (no images)
 tools\build.ps1                release zip
 tools\build-cover-index.ps1    generate a cover index from app-state.json
-docs\                          scanning and artwork notes
+docs\                          scanning, artwork, and transport notes
 ```
 
 ---

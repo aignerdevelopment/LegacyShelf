@@ -63,6 +63,45 @@ namespace LegacyShelf.Services
             var byExe = new Dictionary<string, Game>(StringComparer.OrdinalIgnoreCase);
             var byFolder = new Dictionary<string, Game>(StringComparer.OrdinalIgnoreCase);
 
+            // A transport pack carries its own game metadata, so it works without the registry.
+            var portable = PortableGamesStore.Load();
+            if (portable != null && portable.Games != null)
+            {
+                foreach (var entry in portable.Games)
+                {
+                    token.ThrowIfCancellationRequested();
+                    if (entry == null || string.IsNullOrWhiteSpace(entry.RelativeDir)) continue;
+
+                    var installDir = AppPaths.ResolveStoredPath(entry.RelativeDir);
+                    if (string.IsNullOrWhiteSpace(installDir)) continue;
+
+                    if (!IsUnderAny(installDir, roots))
+                    {
+                        Log.Info("Skipping portable game outside selected roots: " + entry.Name);
+                        continue;
+                    }
+
+                    var exeName = entry.ExeName;
+                    var exePath = string.IsNullOrWhiteSpace(exeName)
+                        ? null
+                        : Path.Combine(installDir, exeName);
+
+                    if (string.IsNullOrWhiteSpace(exePath) || !File.Exists(exePath))
+                    {
+                        string found;
+                        if (FolderScanner.TryFindExe(installDir, out found)) exePath = found;
+                    }
+
+                    var game = CreateGame(entry.Uuid, entry.Name, installDir, exePath, exeName);
+                    if (!string.IsNullOrWhiteSpace(entry.Id)) game.Id = entry.Id;
+                    if (!string.IsNullOrWhiteSpace(entry.FolderName)) game.FolderName = entry.FolderName;
+
+                    AddGame(games, byExe, byFolder, game);
+                }
+
+                Log.Info("Portable game manifest: " + portable.Games.Count + " entries.");
+            }
+
             foreach (var entry in registryGames)
             {
                 token.ThrowIfCancellationRequested();

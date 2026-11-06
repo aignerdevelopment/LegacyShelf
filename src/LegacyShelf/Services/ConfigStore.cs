@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using LegacyShelf.Models;
 
 namespace LegacyShelf.Services
@@ -21,6 +22,16 @@ namespace LegacyShelf.Services
 
             if (config == null) config = AppConfig.CreateDefault();
             config.EnsureDefaults();
+
+            // Stored paths may be relative to the executable (portable/transport packs).
+            for (var i = 0; i < config.Sources.InstallRoots.Count; i++)
+            {
+                config.Sources.InstallRoots[i] =
+                    AppPaths.ResolveStoredPath(config.Sources.InstallRoots[i]);
+            }
+            config.Sources.LauncherDataDir =
+                AppPaths.ResolveStoredPath(config.Sources.LauncherDataDir);
+
             return config;
         }
 
@@ -28,9 +39,18 @@ namespace LegacyShelf.Services
         {
             if (config == null) return;
             config.EnsureDefaults();
+
             try
             {
-                JsonUtil.Save(AppPaths.ConfigPath, config, pretty: true);
+                // Store paths under the app folder relativistically so the whole folder can move.
+                var save = Clone(config);
+                save.Sources.InstallRoots = config.Sources.InstallRoots
+                    .Select(AppPaths.ToStoredPath)
+                    .Where(p => !string.IsNullOrWhiteSpace(p))
+                    .ToList();
+                save.Sources.LauncherDataDir = AppPaths.ToStoredPath(config.Sources.LauncherDataDir);
+
+                JsonUtil.Save(AppPaths.ConfigPath, save, pretty: true);
             }
             catch (Exception ex)
             {

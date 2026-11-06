@@ -22,6 +22,11 @@ namespace LegacyShelf
 
             Log.Init(AppPaths.LogPath);
             Log.Info("LegacyShelf " + GetVersion() + " starting.");
+            Log.Info("Data directory: " + AppPaths.StorageDescription);
+            if (!string.IsNullOrWhiteSpace(AppPaths.StorageMessage))
+            {
+                Log.Info(AppPaths.StorageMessage);
+            }
 
             DispatcherUnhandledException += OnDispatcherUnhandledException;
             AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;

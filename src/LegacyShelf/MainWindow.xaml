@@ -112,6 +112,13 @@
                             AutomationProperties.Name="Rescan library"
                             ToolTip="Rescan library (F5)"
                             Click="Rescan_Click" />
+                    <Button x:Name="PackButton"
+                            Style="{StaticResource GhostButtonStyle}"
+                            Content="Pack"
+                            AutomationProperties.Name="Pack games for transport"
+                            ToolTip="Create a portable set of games for another PC"
+                            Margin="8,0,0,0"
+                            Click="Pack_Click" />
                 </StackPanel>
 
                 <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Top">
@@ -205,6 +212,7 @@
                                             <MenuItem Header="Change artwork…" Tag="{Binding}" Click="ChangeArtworkMenuItem_Click" />
                                             <MenuItem Header="Locate executable…" Tag="{Binding}" Click="LocateExecutableMenuItem_Click" />
                                             <Separator />
+                                            <MenuItem Header="Pack this game for transport…" Tag="{Binding}" Click="PackGameMenuItem_Click" />
                                             <MenuItem Header="Hide game" Tag="{Binding}" Click="HideGameMenuItem_Click" />
                                         </ContextMenu>
                                     </Border.ContextMenu>
