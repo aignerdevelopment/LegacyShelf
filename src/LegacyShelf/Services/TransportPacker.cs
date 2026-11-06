@@ -240,7 +240,15 @@ namespace LegacyShelf.Services
         {
             if (artwork == null || artwork.Count == 0) return;
 
-            var live = JsonUtil.Load<ArtworkManifest>(AppPaths.ArtworkManifestPath);
+            ArtworkManifest live;
+            try
+            {
+                live = JsonUtil.Load<ArtworkManifest>(AppPaths.ArtworkManifestPath);
+            }
+            catch
+            {
+                return;
+            }
             if (live == null || live.Overrides == null) return;
 
             var filtered = new ArtworkManifest();
