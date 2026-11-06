@@ -92,10 +92,6 @@ namespace LegacyShelf
                 var fetch = args.Any(a => string.Equals(a, "--fetch-covers", StringComparison.OrdinalIgnoreCase));
                 var noArt = args.Any(a => string.Equals(a, "--no-art", StringComparison.OrdinalIgnoreCase));
 
-                Config.Sources.InstallRoots = roots.Select(PathUtil.Normalize).Where(Directory.Exists).Distinct().ToList();
-                Config.Sources.LauncherDataDir = launcherDir;
-                ConfigStore.Save(Config);
-
                 var scanner = new LibraryScanner();
                 var progress = new Progress<ScanProgress>(p =>
                 {
