@@ -127,8 +127,10 @@
                                                 <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
                                             <StackPanel>
-                                                <TextBlock Text="{Binding Name}" FontSize="12.5" />
+                                                <TextBlock Text="{Binding Name}" FontSize="12.5"
+                                                           TextTrimming="CharacterEllipsis" />
                                                 <TextBlock Text="{Binding FolderName}" FontSize="10.5"
+                                                           TextTrimming="CharacterEllipsis"
                                                            Foreground="{StaticResource MutedBrush}" Margin="0,2,0,0" />
                                             </StackPanel>
                                             <TextBlock Grid.Column="1" Text="{Binding SizeText}"
