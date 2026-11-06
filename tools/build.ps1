@@ -43,6 +43,13 @@ Copy-Item (Join-Path $root "LICENSE") $stage
 $changelog = Join-Path $root "CHANGELOG.md"
 if (Test-Path $changelog) { Copy-Item $changelog $stage }
 
+$screenshots = Join-Path $root "docs\screenshots"
+if (Test-Path $screenshots) {
+    $screenshotStage = Join-Path $stage "docs\screenshots"
+    New-Item -ItemType Directory -Force $screenshotStage | Out-Null
+    Copy-Item (Join-Path $screenshots "*") $screenshotStage
+}
+
 $assetName = if ([string]::IsNullOrWhiteSpace($Version)) {
     "LegacyShelf-win-x64.zip"
 } else {

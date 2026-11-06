@@ -12,6 +12,22 @@ already installed on your PC. It scans the game folders, imports the original co
 old launcher's cache, and presents everything as a fast, searchable, full-screen shelf. It never
 downloads games and never needs an account or the old store.
 
+## Screenshots
+
+Screenshots use a demo library with original placeholder artwork.
+
+<p align="center">
+  <img src="docs/screenshots/shelf.jpg" alt="LegacyShelf game shelf" width="900">
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/fullscreen.jpg" alt="LegacyShelf full screen" width="900">
+</p>
+
+| Library sources | Transport packs |
+|---|---|
+| <img src="docs/screenshots/sources.jpg" alt="Library sources dialog" width="420"> | <img src="docs/screenshots/transport.jpg" alt="Transport pack dialog" width="420"> |
+
 > LegacyShelf is not affiliated with, endorsed by, or supported by Legacy Games. It only starts
 > games that are already installed. It does not download, install, crack, patch, or redistribute
 > anything.
